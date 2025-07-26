@@ -23,15 +23,18 @@ services:
   front:
     build:
       context: ./front
-    command: npm run dev -- --host 0.0.0.0 --port 5173
-    volumes:
-      - ./front:/front:cached
-      - node_modules:/front/node_modules
+      dockerfile: Dockerfile
+    working_dir: /front
+    command: sh -c "pnpm install && pnpm dev --host 0.0.0.0 --port 5173"
     ports:
       - "5173:5173"
     environment:
       VITE_API_URL: http://localhost:3000
-    working_dir: /front
+      PNPM_HOME: /pnpm
+    volumes:
+      - ./front:/front:cached
+      - node_modules:/front/node_modules
+      # - pnpm-store:/pnpm
 
 volumes:
   db_data:
