@@ -21,7 +21,7 @@ RUN npm install -g corepack && \
 
 # 依存関係を先にインストール（キャッシュ有効化）
 COPY package.json pnpm-lock.yaml* ./
-RUN pnpm install
+RUN pnpm install --frozen-lockfile
 
 # ソースコードはvolumeでマウントするのでCOPY不要
 EXPOSE 5173
