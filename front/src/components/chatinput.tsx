@@ -18,10 +18,14 @@ export const ChatInput: React.FC<{ onSend: (text: string) => void }> = ({
                 placeholder="メッセージを入力"
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                // onKeyDown={(e) => e.key === "Enter" && send()}
-                // onKeyDown={(e) => e.key === "Enter" && send()}
                 onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                    if (e.nativeEvent.isComposing) return;
+
+                    if (e.key === "Enter") {
+                        if (e.shiftKey) {
+                            return;
+                        }
+                        e.preventDefault();
                         send();
                     }
                 }}
