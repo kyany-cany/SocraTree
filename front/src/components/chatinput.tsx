@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 export const ChatInput: React.FC<{ onSend: (text: string) => void }> = ({
     onSend,
@@ -30,12 +31,12 @@ export const ChatInput: React.FC<{ onSend: (text: string) => void }> = ({
                     }
                 }}
             />
-            <button
-                className="bg-blue-500 text-white px-4 py-2 rounded"
+            <Button
+                // className="bg-blue-500 text-white px-4 py-2 rounded"
                 onClick={send}
             >
                 送信
-            </button>
+            </Button>
         </div>
     );
 };
