@@ -116,6 +116,59 @@ body,
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* ==== Green Theme ==== */
+.green-theme {
+  --background: oklch(0.98 0 0); /* 全体背景: 明るいグレー */
+  --foreground: oklch(0.15 0 0); /* 基本文字: 濃いグレー */
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.15 0 0);
+
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0 0);
+
+  /* ===== Primary (緑系) ===== */
+  --primary: oklch(0.65 0.18 145); /* 鮮やかすぎない緑 */
+  --primary-foreground: oklch(1 0 0);
+
+  /* ===== Secondary (淡い緑系) ===== */
+  --secondary: oklch(0.92 0.05 145); /* 薄いグリーン背景 */
+  --secondary-foreground: oklch(0.2 0 0);
+
+  /* ===== Muted (サブ要素) ===== */
+  --muted: oklch(0.95 0 0); /* 淡いグレー */
+  --muted-foreground: oklch(0.4 0 0);
+
+  /* ===== Accent (ハイライト) ===== */
+  --accent: oklch(0.92 0.05 145); /* アクセント緑 */
+  --accent-foreground: oklch(0.2 0 0);
+
+  /* ===== Destructive (赤系はそのまま) ===== */
+  --destructive: oklch(0.577 0.245 27.325);
+
+  /* ===== 枠線・入力・フォーカスリング ===== */
+  --border: oklch(0.85 0 0);
+  --input: oklch(0.92 0 0);
+  --ring: oklch(0.6 0.05 145); /* 緑寄りのリング */
+
+  /* ===== Chart Colors (緑系寄せ) ===== */
+  --chart-1: oklch(0.6 0.18 145);
+  --chart-2: oklch(0.55 0.12 160);
+  --chart-3: oklch(0.5 0.1 180);
+  --chart-4: oklch(0.7 0.14 100);
+  --chart-5: oklch(0.65 0.13 120);
+
+  /* ===== Sidebar (グリーン系統) ===== */
+  --sidebar: oklch(0.98 0 0);
+  --sidebar-foreground: oklch(0.15 0 0);
+  --sidebar-primary: oklch(0.6 0.18 145);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.92 0.05 145);
+  --sidebar-accent-foreground: oklch(0.2 0 0);
+  --sidebar-border: oklch(0.85 0 0);
+  --sidebar-ring: oklch(0.6 0.05 145);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

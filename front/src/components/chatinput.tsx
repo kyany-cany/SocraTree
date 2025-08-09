@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 export const ChatInput: React.FC<{ onSend: (text: string) => void }> = ({
     onSend,
@@ -13,9 +14,9 @@ export const ChatInput: React.FC<{ onSend: (text: string) => void }> = ({
     };
 
     return (
-        <div className="p-4 flex gap-2 border-t bg-white">
-            <input
-                className="flex-1 border rounded px-3 py-2"
+        <div className="p-4 flex gap-2 border-t">
+            <Textarea
+                className="resize-none"
                 placeholder="メッセージを入力"
                 value={text}
                 onChange={(e) => setText(e.target.value)}
@@ -32,6 +33,7 @@ export const ChatInput: React.FC<{ onSend: (text: string) => void }> = ({
                 }}
             />
             <Button
+                variant="default"
                 // className="bg-blue-500 text-white px-4 py-2 rounded"
                 onClick={send}
             >
