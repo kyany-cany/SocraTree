@@ -30,7 +30,7 @@ export const ChatPage = () => {
             <Sidebar open={sidebarOpen} onToggle={() => setSidebarOpen((prev) => !prev)} />
 
             <main className="flex-1 flex flex-col overflow-hidden">
-                <div className="flex-1 overflow-y-auto p-4 bg-gray-800">
+                <div className="flex-1 overflow-y-auto p-4">
                     {messages.map((msg, i) => (
                         <ChatMessage key={i} message={msg} />
                     ))}
