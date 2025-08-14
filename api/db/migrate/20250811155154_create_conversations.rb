@@ -5,6 +5,7 @@ class CreateConversations < ActiveRecord::Migration[8.0]
       t.string  :status,   null: false, default: "active"
       t.string  :model
       t.boolean :archived, null: false, default: false
+      t.integer :messages_count, default: 0, null: false
       t.timestamps
     end
     add_index :conversations, :status
