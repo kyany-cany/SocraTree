@@ -11,7 +11,7 @@ class ConversationsController < ApplicationController
       id: conv.id,
       title: conv.title,
       status: conv.status,
-      messages_count: conv.messages.count,
+      messages_count: conv.messages_count,
       updated_at: conv.updated_at
     }
   end
