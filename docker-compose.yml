@@ -17,7 +17,7 @@ services:
     build:
       context: ./api
     ports:
-      - "3000:3000"
+      - "4000:3000"
     volumes:
       - ./api:/app
     command: bash -c "bin/rails db:prepare && bin/rails s -b 0.0.0.0 -p 3000"

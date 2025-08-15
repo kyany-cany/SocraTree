@@ -41,7 +41,9 @@ module Api
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
 
-    # config/application.rb の中
     config.autoload_paths << Rails.root.join('lib')
+    
+    config.middleware.use ActionDispatch::Cookies
+    config.middleware.use ActionDispatch::Session::CookieStore, key: '_session'
   end
 end
