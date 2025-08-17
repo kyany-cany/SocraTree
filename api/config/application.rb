@@ -43,5 +43,9 @@ module Api
 
     # config/application.rb の中
     config.autoload_paths << Rails.root.join('lib')
+
+    # APIモードでもCookie/Sessionを使う
+    config.middleware.use ActionDispatch::Cookies
+    config.middleware.use ActionDispatch::Session::CookieStore, key: "_session"
   end
 end
