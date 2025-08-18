@@ -1,12 +1,11 @@
 import React, { useState } from "react";
 import type { MeState } from "../types";
 import { signIn, getMe, API_BASE } from "../lib/auth";
+import { useAuth } from "../lib/auth_provider";
 
-export default function SignIn({
-    setMe,
-}: {
-    setMe: React.Dispatch<React.SetStateAction<MeState>>;
-}) {
+export default function SignIn() {
+    const { me, setMe } = useAuth();
+
     const [email, setEmail] = useState("test@example.com");
     const [password, setPassword] = useState("password");
     const [loading, setLoading] = useState(false);
@@ -20,6 +19,7 @@ export default function SignIn({
             await signIn(email, password);
             const m = await getMe();
             setMe(m); // 親の状態を更新
+            console.log("ログイン成功", me);
         } catch (e: any) {
             setError(e?.body?.error || e.message);
         } finally {

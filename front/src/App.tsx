@@ -1,23 +1,37 @@
-import React, { useEffect, useState } from "react";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import { ChatPage } from "./pages/Chat";
+import React, { useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import SignIn from "./pages/sign_in";
+import { ChatPage } from "./pages/Chat";
+import { PrivateRoute } from "./private_routes";
+import { AuthProvider, useAuth } from "./lib/auth_provider";
+
+function AppRoutes() {
+  const { me, setMe } = useAuth();
+
+  return (
+    <Routes>
+      <Route
+        path="/login"
+        element={me ? <Navigate to="/chat" replace /> : <SignIn />}
+      />
+
+      {/* ここから下はログイン必須 */}
+      <Route element={<PrivateRoute />}>
+        <Route path="/chat" element={<ChatPage />} />
+      </Route>
+
+      {/* どのURLでもログイン状態に応じてデフォルトへ */}
+      <Route path="*" element={<Navigate to={me ? "/chat" : "/login"} replace />} />
+    </Routes>
+  );
+}
 
 export default function App() {
-  const [me, setMe] = useState<{ id: number; email: string } | null | undefined>(undefined);
-  if (me === undefined) {
-    return <div className="p-6">読み込み中...</div>;
-  }
-  else if (me === null) {
-    return (
-      <SignIn
-        setMe={setMe}
-      />
-    );
-  }
-  else {
-    return (
-      <ChatPage />
-    )
-  }
+  return (
+    <Router>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </Router>
+  );
 }
