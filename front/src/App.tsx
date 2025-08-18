@@ -1,17 +1,23 @@
+import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import { ChatPage } from "./pages/Chat";
+import SignIn from "./pages/sign_in";
 
 export default function App() {
-  return (
-    <ChatPage />
-    // <Router>
-    //   <nav>
-    //     <Link to="/">Home</Link> | <Link to="/chat">Chat</Link>
-    //   </nav>
-    //   <Routes>
-    //     <Route path="/" element={<h1>Home Page</h1>} />
-    //     <Route path="/chat" element={<ChatPage />} />
-    //   </Routes>
-    // </Router>
-  );
+  const [me, setMe] = useState<{ id: number; email: string } | null | undefined>(undefined);
+  if (me === undefined) {
+    return <div className="p-6">読み込み中...</div>;
+  }
+  else if (me === null) {
+    return (
+      <SignIn
+        setMe={setMe}
+      />
+    );
+  }
+  else {
+    return (
+      <ChatPage />
+    )
+  }
 }
