@@ -1,15 +1,20 @@
 import React, { useState } from "react";
-import type { MeState } from "../types";
 import { signIn, getMe, API_BASE } from "../lib/auth";
 import { useAuth } from "../lib/auth_provider";
+import { beginOAuth } from "../lib/oauth";
 
 export default function SignIn() {
     const { me, setMe } = useAuth();
-
     const [email, setEmail] = useState("test@example.com");
     const [password, setPassword] = useState("password");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    function onAuthLogin(e: React.FormEvent) {
+        console.log("OAuthログイン開始");
+        e.preventDefault();
+        beginOAuth();
+    }
 
     async function onLogin(e: React.FormEvent) {
         e.preventDefault();
@@ -20,6 +25,7 @@ export default function SignIn() {
             const m = await getMe();
             setMe(m); // 親の状態を更新
             console.log("ログイン成功", me);
+            beginOAuth(); // OAuthログインを開始
         } catch (e: any) {
             setError(e?.body?.error || e.message);
         } finally {

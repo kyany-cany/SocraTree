@@ -12,5 +12,10 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
       headers: :any,
       methods: [:get, :post, :put, :patch, :delete, :options, :head],
       credentials: true
+    resource '/v2/*',
+      headers: :any,
+      expose: ['Authorization'],
+      methods: [:get, :post, :put, :patch, :delete, :options],
+      credentials: false
   end
 end

@@ -50,6 +50,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
-    const value = useMemo(() => ({ me, setMe, refreshMe, signOut, loading }), [me, loading]);
+    const value: AuthContext = useMemo(() => ({ me, setMe, refreshMe, signOut, loading }), [me, loading]);
     return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
