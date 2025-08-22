@@ -1,34 +1,29 @@
 import React, { useState } from "react";
-import { signIn, getMe, API_BASE } from "../lib/auth";
-import { useAuth } from "../lib/auth_provider";
-import { beginOAuth } from "../lib/oauth";
+import { signIn } from "../lib/auth";
+import { beginOAuth, getRememberMe, setRememberMe } from "../lib/oauth";
 
 export default function SignIn() {
-    const { me, setMe } = useAuth();
     const [email, setEmail] = useState("test@example.com");
     const [password, setPassword] = useState("password");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-
-    function onAuthLogin(e: React.FormEvent) {
-        console.log("OAuthログイン開始");
-        e.preventDefault();
-        beginOAuth();
-    }
+    const [remember, setRemember] = useState(getRememberMe());
 
     async function onLogin(e: React.FormEvent) {
         e.preventDefault();
         setLoading(true);
         setError(null);
         try {
+            // 1) Devise で Cookie セッション確立
             await signIn(email, password);
-            const m = await getMe();
-            setMe(m); // 親の状態を更新
-            console.log("ログイン成功", me);
-            beginOAuth(); // OAuthログインを開始
+
+            // 2) すぐに Doorkeeper 認可へ（code発行→/callbackでtoken交換）
+            beginOAuth();
+
+            // 以降は遷移するため setLoading を戻す必要なし
+            setRememberMe(remember);
         } catch (e: any) {
             setError(e?.body?.error || e.message);
-        } finally {
             setLoading(false);
         }
     }
@@ -67,11 +62,16 @@ export default function SignIn() {
                     >
                         {loading ? "送信中..." : "ログイン"}
                     </button>
+                    <label style={{ display: "block", marginTop: 8 }}>
+                        <input
+                            type="checkbox"
+                            checked={remember}
+                            onChange={(e) => setRemember(e.target.checked)}
+                        />
+                        Remember me
+                    </label>
                 </form>
                 {error && <div className="p-3 rounded-xl text-sm border">{String(error)}</div>}
-                <div className="text-xs text-gray-500">
-                    API_BASE: <code>{API_BASE}</code>
-                </div>
             </div>
         </div>
     );

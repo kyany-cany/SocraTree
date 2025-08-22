@@ -1,7 +1,4 @@
-import type { Me } from "../types";
-
-export const API_BASE =
-    import.meta.env.VITE_API_BASE || "http://localhost:3000";
+import { API_BASE } from "./config";
 
 /** 401 を横取りしてグローバル処理したいとき用のラッパ生成器（任意） */
 export function createFetchJSON(onUnauthorized?: () => void) {
@@ -62,21 +59,4 @@ export async function signOut() {
         method: "DELETE",
         headers: { "X-CSRF-Token": csrf },
     });
-}
-
-/** 現在のユーザー（GET /me） */
-export async function getMe(): Promise<Me> {
-    return fetchJSON<Me>(`${API_BASE}/me`);
-}
-
-/** 401 を null に丸める安全版（初期化で使う用） */
-export async function safeGetMe(): Promise<Me | null> {
-    try {
-        return await getMe();
-    } catch (e: any) {
-        if (e?.status === 401) return null;
-        // ネットワーク断などでも初期化を進めたいなら下行を有効化
-        // return null;
-        throw e;
-    }
 }

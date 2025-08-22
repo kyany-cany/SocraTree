@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+FIRST_PARTY_CLIENT_IDS = ENV.fetch("FIRST_PARTY_CLIENT_IDS", "")
+  .split(",").map!(&:strip)
+
 Doorkeeper.configure do
   # Change the ORM that doorkeeper will use (requires ORM extensions installed).
   # Check the list of supported ORMs here: https://github.com/doorkeeper-gem/doorkeeper#orms
@@ -12,6 +15,10 @@ Doorkeeper.configure do
     # Example implementation:
     #   User.find_by(id: session[:user_id]) || redirect_to(new_user_session_url)
   end
+
+  # skip_authorization do |_owner, client|
+  #   Rails.env.development? || FIRST_PARTY_CLIENT_IDS.include?(client.uid)
+  # end
 
   # 認可コード + PKCE を前提（Implicit/Passwordは使わない）
   grant_flows %w[authorization_code]
@@ -27,7 +34,9 @@ Doorkeeper.configure do
   access_token_expires_in 15.minutes
 
   # スコープ最小から開始
-  default_scopes :user
+  # default_scopes :user
+  default_scopes :public
+  optional_scopes :user
   enforce_configured_scopes
 
   # JWT をアクセストークンとして発行（doorkeeper-jwt）

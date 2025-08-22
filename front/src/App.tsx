@@ -4,6 +4,13 @@ import { ChatPage } from "./pages/Chat";
 import { PrivateRoute } from "./private_routes";
 import { AuthProvider, useAuth } from "./lib/auth_provider";
 import OAuthCallback from "./pages/callback";
+import { Splash } from "./pages/splash";
+
+function Gate() {
+  const { loading } = useAuth();
+  if (loading) return <Splash />;      // ここで一切ルーティングを描画しない
+  return <AppRoutes />;
+}
 
 function AppRoutes() {
   const { me } = useAuth();
@@ -25,7 +32,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRoutes />
+        <Gate />
       </AuthProvider>
     </BrowserRouter>
   );

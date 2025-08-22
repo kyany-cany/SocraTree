@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { exchangeCodeForToken } from "../lib/oauth";
 import { useAuth } from "../lib/auth_provider";
@@ -6,8 +6,12 @@ import { useAuth } from "../lib/auth_provider";
 export default function OAuthCallback() {
     const nav = useNavigate();
     const { refreshMe } = useAuth();
+    const ranRef = useRef(false);
 
     useEffect(() => {
+        if (ranRef.current) return;
+        ranRef.current = true;
+        console.log("OAuthCallback useEffect called");
         (async () => {
             const url = new URL(window.location.href);
             const code = url.searchParams.get("code");
@@ -29,6 +33,7 @@ export default function OAuthCallback() {
                 nav("/login", { replace: true });
             }
         })();
+        console.log("OAuthCallback useEffect finished");
     }, [nav, refreshMe]);
 
     return <div style={{ padding: 24 }}>サインイン処理中…</div>;
