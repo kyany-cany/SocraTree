@@ -22,7 +22,7 @@ export default function OAuthCallback() {
             }
             try {
                 await exchangeCodeForToken(code, state);
-                await refreshMe(); // Bearerで /me を取得して me を確定
+                await refreshMe();
                 // URL掃除
                 url.searchParams.delete("code");
                 url.searchParams.delete("state");

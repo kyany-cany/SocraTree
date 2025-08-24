@@ -60,3 +60,5 @@ export async function signOut() {
         headers: { "X-CSRF-Token": csrf },
     });
 }
+
+export { API_BASE };
