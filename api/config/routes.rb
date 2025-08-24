@@ -7,10 +7,14 @@ Rails.application.routes.draw do
   # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check
 
-  use_doorkeeper # ← Doorkeeper のルート追加（/oauth/authorize, /oauth/token など）
+  # use_doorkeeper # ← Doorkeeper のルート追加（/oauth/authorize, /oauth/token など）
 
   namespace :v2 do
     resources :conversations, only: [:create, :show]
+  end
+
+  use_doorkeeper do
+    controllers authorizations: 'custom/authorizations'
   end
 
   # Defines the root path route ("/")
