@@ -11,6 +11,7 @@ Rails.application.routes.draw do
 
   namespace :v2 do
     resources :conversations, only: [:create, :show]
+    resource :consent, only: [:create], controller: "consent"
   end
 
   use_doorkeeper do

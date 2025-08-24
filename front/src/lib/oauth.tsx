@@ -1,3 +1,4 @@
+import type { TokenSet } from "@/types";
 import { API_BASE } from "./config";
 import {
     configureOAuthClient,
@@ -114,8 +115,8 @@ export {
 };
 
 // 必要なら /me 呼び出しもここで薄くラップ（apiGetJson 経由推奨）
-import { apiGetJson } from "./api";
-import type { TokenSet } from "@/types";
-export async function getMe() {
-    return apiGetJson("/me");
-}
+// import { apiGetJson } from "./api";
+// import type { TokenSet } from "@/types";
+// export async function getMe() {
+//     return apiGetJson("/me");
+// }

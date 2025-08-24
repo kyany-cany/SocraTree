@@ -1,4 +1,3 @@
-// src/lib/api.ts
 import type { Me } from "@/types";
 import { API_BASE } from "./config";
 import { ensureAccessToken, Token } from "./oauth";

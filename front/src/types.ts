@@ -2,6 +2,8 @@
 export type Me = {
   id: number;
   email: string;
+  research_consent: boolean;
+  research_consent_version: string;
 };
 
 // me の状態を親が扱う場合の型

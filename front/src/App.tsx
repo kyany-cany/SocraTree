@@ -5,10 +5,11 @@ import { PrivateRoute } from "./private_routes";
 import { AuthProvider, useAuth } from "./lib/auth_provider";
 import OAuthCallback from "./pages/callback";
 import { Splash } from "./pages/splash";
+import ConsentPage from "./pages/consent";
 
 function Gate() {
   const { loading } = useAuth();
-  if (loading) return <Splash />;      // ここで一切ルーティングを描画しない
+  if (loading) return <Splash />;
   return <AppRoutes />;
 }
 
@@ -20,6 +21,7 @@ function AppRoutes() {
       <Route path="/callback" element={<OAuthCallback />} />
 
       <Route element={<PrivateRoute />}>
+        <Route path="/consent" element={<ConsentPage />} />
         <Route path="/chat" element={<ChatPage />} />
       </Route>
 
