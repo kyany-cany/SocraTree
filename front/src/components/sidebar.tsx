@@ -11,7 +11,7 @@ type SidebarProps = {
 }
 
 function newChat() {
-    apiPostJson("/v2/chats", { title: "new chat" }).then(() => {
+    apiPostJson("/chats", { title: "new chat" }).then(() => {
         console.log("New chat created")
     })
 }

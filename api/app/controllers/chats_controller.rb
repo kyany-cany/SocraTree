@@ -1,8 +1,15 @@
-class Api::ChatsController < ApplicationController
-    def create
-        message = params[:message]
-        gemini = GeminiClient.new
-        response_text = gemini.chat(message)
-        render json: { reply: response_text }
-    end
+class ChatsController < BaseController
+  def create
+    chat = Chat.create!(title: params[:title].presence || "New chat")
+    render json: { id: chat.id, title: chat.title }, status: :created
+  end
+
+  def show
+    chat = Chat.find(params[:id])
+    render json: {
+      id: chat.id,
+      title: chat.title,
+      updated_at: chat.updated_at
+    }
+  end
 end

@@ -1,4 +1,3 @@
-# app/controllers/api/messages_controller.rb
 class MessagesController < ApplicationController
   before_action :set_conversation
 
@@ -85,4 +84,4 @@ class MessagesController < ApplicationController
   def limit_param
     (params[:limit] || 50).to_i.clamp(1, 200)
   end
-end
+end  
