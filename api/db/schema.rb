@@ -15,20 +15,20 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_24_115447) do
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
 
-  create_table "conversations", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+  create_table "chats", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "title", default: "New chat", null: false
     t.string "status", default: "active", null: false
     t.string "model"
     t.boolean "archived", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["archived"], name: "index_conversations_on_archived"
-    t.index ["status"], name: "index_conversations_on_status"
-    t.index ["updated_at"], name: "index_conversations_on_updated_at"
+    t.index ["archived"], name: "index_chats_on_archived"
+    t.index ["status"], name: "index_chats_on_status"
+    t.index ["updated_at"], name: "index_chats_on_updated_at"
   end
 
   create_table "messages", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.uuid "conversation_id", null: false
+    t.uuid "chat_id", null: false
     t.integer "role", default: 0, null: false
     t.text "content", null: false
     t.jsonb "metadata", default: {}, null: false
@@ -38,8 +38,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_24_115447) do
     t.text "error_text"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["conversation_id", "created_at"], name: "index_messages_on_conversation_id_and_created_at"
-    t.index ["conversation_id"], name: "index_messages_on_conversation_id"
+    t.index ["chat_id", "created_at"], name: "index_messages_on_chat_id_and_created_at"
+    t.index ["chat_id"], name: "index_messages_on_chat_id"
   end
 
   create_table "oauth_access_grants", force: :cascade do |t|
@@ -98,10 +98,11 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_24_115447) do
     t.datetime "research_consent_at"
     t.string "research_consent_version"
     t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["research_consent"], name: "index_users_on_research_consent"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
-  add_foreign_key "messages", "conversations", on_delete: :cascade
+  add_foreign_key "messages", "chats", on_delete: :cascade
   add_foreign_key "oauth_access_grants", "oauth_applications", column: "application_id"
   add_foreign_key "oauth_access_tokens", "oauth_applications", column: "application_id"
 end

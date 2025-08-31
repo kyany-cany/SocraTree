@@ -3,10 +3,17 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { ChevronLeft, ChevronRight, MessageSquare, Settings } from "lucide-react"
+import { apiPostJson } from "@/lib/api"
 
 type SidebarProps = {
     open: boolean
     onToggle: () => void
+}
+
+function newChat() {
+    apiPostJson("/v2/chats", { title: "new chat" }).then(() => {
+        console.log("New chat created")
+    })
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ open, onToggle }) => {
@@ -33,7 +40,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onToggle }) => {
                     </div>
                     <Separator />
                     <ScrollArea className="h-[calc(100vh-6rem)] px-2">
-                        <Button variant="ghost" className="w-full justify-start gap-2 mb-1">
+                        <Button
+                            variant="ghost"
+                            className="w-full justify-start gap-2 mb-1"
+                            onClick={newChat}
+                        >
                             <MessageSquare className="h-4 w-4" /> チャット
                         </Button>
                         <Button
