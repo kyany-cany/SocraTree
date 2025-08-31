@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { signIn } from "../lib/auth";
 import { beginOAuth, getRememberMe, setRememberMe } from "../lib/oauth";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function SignIn() {
     const [email, setEmail] = useState("test@example.com");
@@ -34,8 +37,8 @@ export default function SignIn() {
                 <h1 className="text-2xl font-bold">ログイン</h1>
                 <form onSubmit={onLogin} className="space-y-4">
                     <label className="block">
-                        <span className="text-sm text-gray-700">Email</span>
-                        <input
+                        <span className="text-sm">Email</span>
+                        <Input
                             className="mt-1 w-full rounded-xl border px-3 py-2"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
@@ -45,8 +48,8 @@ export default function SignIn() {
                         />
                     </label>
                     <label className="block">
-                        <span className="text-sm text-gray-700">Password</span>
-                        <input
+                        <span className="text-sm">Password</span>
+                        <Input
                             className="mt-1 w-full rounded-xl border px-3 py-2"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
@@ -55,21 +58,27 @@ export default function SignIn() {
                             autoComplete="current-password"
                         />
                     </label>
-                    <button
+                    <Button
                         type="submit"
                         disabled={loading}
                         className="w-full rounded-xl border px-4 py-2 disabled:opacity-50"
                     >
                         {loading ? "送信中..." : "ログイン"}
-                    </button>
-                    <label style={{ display: "block", marginTop: 8 }}>
-                        <input
-                            type="checkbox"
+                    </Button>
+                    <div className="flex items-center gap-3">
+                        <Checkbox
+                            id="remember"
                             checked={remember}
-                            onChange={(e) => setRemember(e.target.checked)}
+                            onCheckedChange={(checked) => setRemember(!!checked)}
+                            className="h-4 w-4"
                         />
-                        Remember me
-                    </label>
+                        <label
+                            htmlFor="remember"
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                            Remember me
+                        </label>
+                    </div>
                 </form>
                 {error && <div className="p-3 rounded-xl text-sm border">{String(error)}</div>}
             </div>
