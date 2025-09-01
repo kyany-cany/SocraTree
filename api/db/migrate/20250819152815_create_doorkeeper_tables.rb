@@ -20,7 +20,8 @@ class CreateDoorkeeperTables < ActiveRecord::Migration[8.0]
     add_index :oauth_applications, :uid, unique: true
 
     create_table :oauth_access_grants do |t|
-      t.references :resource_owner,  null: false
+      # resource_ownerのidをuuidに変更
+      t.references :resource_owner,  null: false, type: :uuid, index: true
       t.references :application,     null: false
       t.string   :token,             null: false
       t.integer  :expires_in,        null: false
@@ -38,7 +39,8 @@ class CreateDoorkeeperTables < ActiveRecord::Migration[8.0]
     )
 
     create_table :oauth_access_tokens do |t|
-      t.references :resource_owner, index: true
+      # resource_ownerのidをuuidに変更
+      t.references :resource_owner, index: true, type: :uuid
 
       # Remove `null: false` if you are planning to use Password
       # Credentials Grant flow that doesn't require an application.
@@ -93,7 +95,7 @@ class CreateDoorkeeperTables < ActiveRecord::Migration[8.0]
     )
 
     # Uncomment below to ensure a valid reference to the resource owner's table
-    # add_foreign_key :oauth_access_grants, <model>, column: :resource_owner_id
-    # add_foreign_key :oauth_access_tokens, <model>, column: :resource_owner_id
+    add_foreign_key :oauth_access_grants, users, column: :resource_owner_id
+    add_foreign_key :oauth_access_tokens, users, column: :resource_owner_id
   end
 end
