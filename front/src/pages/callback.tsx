@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { exchangeCodeForToken } from "../lib/oauth";
+import { exchangeCodeForToken, Token } from "../lib/oauth";
 import { useAuth } from "../lib/auth_provider";
 
 export default function OAuthCallback() {
@@ -21,7 +21,8 @@ export default function OAuthCallback() {
                 return;
             }
             try {
-                await exchangeCodeForToken(code, state);
+                const json = await exchangeCodeForToken(code, state);
+                Token.set(json);
                 await refreshMe();
                 // URL掃除
                 url.searchParams.delete("code");

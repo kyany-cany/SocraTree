@@ -100,7 +100,7 @@ export async function exchangeCodeForToken(code: string, stateFromUrl?: string) 
         expiresIn: json.expires_in,
         createdAt: json.created_at,
     });
-    Token.set(json);
+    // Token.set(json);
 
     sessionStorage.removeItem("pkce_verifier");
     sessionStorage.removeItem("oauth_state");
