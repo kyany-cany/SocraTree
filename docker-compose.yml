@@ -28,10 +28,10 @@ services:
       PGDATABASE: app_development
       RAILS_ENV: development
       GEMINI_API_KEY: GEMINI_API_KEY_PLACEHOLDER
-      FIRST_PARTY_CLIENT_IDS: "Nea5B3HT2rapVdGQ9pHTFlc4Mh4q8uLAzbjF2UG5UPU"
+      FRONT_OAUTH_UID: "Nea5B3HT2rapVdGQ9pHTFlc4Mh4q8uLAzbjF2UG5UPU"
     depends_on:
       db:
-        condition: service_healthy # ← healthcheckに連動
+        condition: service_healthy
 
   front:
     build:
