@@ -9,13 +9,6 @@ export type Me = {
 // me の状態を親が扱う場合の型
 export type MeState = Me | null | undefined;
 
-export type Chat = {
-  id: string;
-  title: string;
-  created_at: string; // ISO 8601 format
-  updated_at: string; // ISO 8601 format
-};
-
 export type TokenSet = {
   access_token: string;
   refresh_token?: string;
@@ -27,4 +20,32 @@ export type OAuthClientEndpoints = {
   tokenUrl: string;
   revokeUrl: string;
   clientId: string;
+};
+
+export type Chat = {
+  id: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Message = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Metrics = {
+  token_in: number | null;
+  token_out: number | null;
+  latency_ms: number | null;
+};
+
+export type MessageResponse = {
+  chat: Chat;
+  user_msg: Pick<Message, "id" | "created_at" | "updated_at">;
+  assistant_msg: Message;
+  metrics: Metrics;
 };

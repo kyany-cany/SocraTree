@@ -1,66 +1,120 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { ChatMessage } from "../components/chatmessage";
 import { ChatInput } from "../components/chatinput";
 import { Sidebar } from "../components/sidebar";
-import axios from "axios";
-import type { Chat } from "@/types";
-import { apiGetJson } from "@/lib/api";
+import type { Chat, Message, MessageResponse } from "@/types";
+import { apiGetJson, apiPostJson } from "@/lib/api";
 
-type Message = {
-    role: "user" | "assistant";
-    content: string;
-};
-
-const dummyMessages: Message[] = [
-    { role: "user", content: "こんにちは" },
-    { role: "assistant", content: "こんにちは！今日はどのようなご用件でしょうか？" },
-];
+// const dummyMessages: Message[] = [
+//     { role: "user", content: "こんにちは" },
+//     { role: "assistant", content: "こんにちは！今日はどのようなご用件でしょうか？" },
+// ];
 
 export const ChatPage = () => {
     const [sidebarOpen, setSidebarOpen] = useState(true);
-    const [currentChat, setCurrentChat] = useState<Chat | null>(null);
+    const [chats, setChats] = useState<Chat[]>([]);
+    const [currentChatId, setCurrentChatId] = useState<string | null>(null);
+    const isSendingRef = useRef<boolean>(false);
     const [messages, setMessages] = useState<Message[]>([]);
 
     const handleSend = async (text: string) => {
-        setMessages((prev) => [...prev, { role: "user", content: text }]);
+        if (isSendingRef.current) return;
+        isSendingRef.current = true;
+        const existingChatId = currentChatId;
+
+        // 新規なら一時IDを作成
+        let chatTempId = existingChatId;
+        if (!existingChatId) {
+            chatTempId = crypto.randomUUID();
+            const tempChat: Chat = { id: chatTempId, title: "New Chat", created_at: "", updated_at: "" };
+            setChats((prev) => [tempChat, ...prev]);
+            setCurrentChatId(chatTempId);
+        }
+
+        const tempMessageId = crypto.randomUUID();
+        const userMessage: Message = { role: "user", content: text, id: tempMessageId, created_at: "", updated_at: "" };
+        setMessages((prev) => [...prev, userMessage]);
+
         try {
-            const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/chats`, { message: text });
-            setMessages((prev) => [...prev, { role: "assistant", content: res.data.reply }]);
-        } catch (error) {
-            console.error(error);
-            setMessages((prev) => [...prev, { role: "assistant", content: "エラーが発生しました" }]);
+            const url = currentChatId ? `/chats/${currentChatId}/messages` : "/messages";
+            const res = await apiPostJson<MessageResponse>(url, { content: text });
+            console.log(res);
+            setMessages((prev) =>
+                prev.map((m) =>
+                    m.id === tempMessageId
+                        ? {
+                            role: "user",
+                            content: text,
+                            id: res.user_msg.id,
+                            created_at: res.user_msg.created_at,
+                            updated_at: res.user_msg.updated_at,
+                        }
+                        : m
+                )
+            );
+
+            const assistantMessage: Message = {
+                role: "assistant",
+                content: res.assistant_msg.content,
+                id: res.assistant_msg.id,
+                created_at: res.assistant_msg.created_at,
+                updated_at: res.assistant_msg.updated_at
+            };
+            setMessages((prev) => [...prev, assistantMessage]);
+
+            if (chatTempId !== res.chat.id) {
+                setChats(prev => prev.map(c => (c.id === chatTempId ? res.chat : c)));
+                setCurrentChatId(res.chat.id);
+            } else {
+                setChats(prev => prev.map(c => (c.id === chatTempId ? { ...c, updated_at: res.chat.updated_at } : c)));
+            }
+        } catch (e) {
+            console.error(e);
+            setMessages(prev => [
+                ...prev,
+                { id: crypto.randomUUID(), role: "assistant", content: "エラーが発生しました", created_at: "", updated_at: "" },
+            ]);
+        } finally {
+            isSendingRef.current = false;
         }
     };
 
-    useEffect(() => {
-        if (currentChat) {
-            (async () => {
-                try {
-                    // const list = await apiGetJson<Message[]>(`/chats/${currentChat.id}/messages`);
-                    setMessages(dummyMessages);
-                } finally {
-                }
-            })();
-        } else {
-            setMessages([]);
-        }
-    }, [currentChat]);
+    // useEffect(() => {
+    //     if (!currentChatId) {
+    //         setMessages([]);
+    //         return;
+    //     }
+    //     if (!isSendingRef.current && currentChatId) {
+    //         (async () => {
+    //             try {
+    //                 const list = await apiGetJson<Message[]>(`/chats/${currentChatId}/messages`);
+    //                 setMessages(list);
+    //             } finally {
+    //             }
+    //         })();
+    //     } else {
+    //         return;
+    //     }
+    // }, [currentChatId]);
 
     return (
         <div className="flex h-full overflow-hidden">
             <Sidebar
                 open={sidebarOpen}
                 onToggle={() => setSidebarOpen((prev) => !prev)}
-                setCurrentChat={setCurrentChat}
+                chats={chats}
+                setChats={setChats}
+                setCurrentChatId={setCurrentChatId}
+                setMessages={setMessages}
             />
 
             <main className="flex-1 flex flex-col overflow-hidden">
-                {currentChat ? (
+                {currentChatId ? (
                     <>
                         {/* メッセージ一覧 */}
                         <div className="flex-1 overflow-y-auto p-4">
-                            {messages.map((msg, i) => (
-                                <ChatMessage key={i} message={msg} />
+                            {messages.map((msg) => (
+                                <ChatMessage key={msg.id} message={msg} />
                             ))}
                         </div>
                         {/* 入力欄 */}

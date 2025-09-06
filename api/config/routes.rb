@@ -9,13 +9,6 @@ Rails.application.routes.draw do
 
   # use_doorkeeper # ← Doorkeeper のルート追加（/oauth/authorize, /oauth/token など）
 
-  # namespace :v2 do
-  #   resources :chats, only: [:create, :show] do
-  #     resources :messages, only: [:index, :create]
-  #   end
-  #   resource :consent, only: [:create], controller: "consent"
-  # end
-
   use_doorkeeper do
     controllers authorizations: 'custom/authorizations'
   end
@@ -33,7 +26,10 @@ Rails.application.routes.draw do
 
   resource :consent, only: [:create], controller: "consent"
 
-  resources :conversations, only: [:create, :show] do
+  resources :chats, only: [:index] do
     resources :messages, only: [:index, :create]
   end
+
+
+  resources :messages, only: [:index, :create]
 end

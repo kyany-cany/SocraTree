@@ -3,46 +3,49 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { ChevronLeft, ChevronRight, MessageSquare, Settings } from "lucide-react"
-import type { Chat } from "@/types"
+import type { Chat, Message } from "@/types"
 import { useEffect, useState } from "react"
 import { apiGetJson } from "@/lib/api"
 
 type SidebarProps = {
     open: boolean
     onToggle: () => void
-    setCurrentChat: React.Dispatch<React.SetStateAction<Chat | null>>
+    chats: Chat[]
+    setChats: React.Dispatch<React.SetStateAction<Chat[]>>
+    setCurrentChatId: React.Dispatch<React.SetStateAction<string | null>>
+    setMessages: React.Dispatch<React.SetStateAction<Message[]>>
 }
 
-const dummyChats: Chat[] = [
-    {
-        id: "1",
-        title: "チャット1",
-        created_at: "2023-10-01T12:00:00Z",
-        updated_at: "2023-10-01T12:00:00Z",
-    },
-    {
-        id: "2",
-        title: "チャット2",
-        created_at: "2023-10-02T12:00:00Z",
-        updated_at: "2023-10-02T12:00:00Z",
-    },
-]
-
-export const Sidebar: React.FC<SidebarProps> = ({ open, onToggle, setCurrentChat }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ open, onToggle, chats, setChats, setCurrentChatId, setMessages }) => {
     const { signOut } = useAuth()
-    const [chats, setChats] = useState<Chat[]>([]);
 
     useEffect(() => {
         (async () => {
             try {
-                // const list = await apiGetJson<Chat[]>("/chats");
-                // // 更新日時で新しい順に並べておく
-                // list.sort((a, b) => (a.updated_at < b.updated_at ? 1 : -1));
-                setChats(dummyChats);
+                const list = await apiGetJson<Chat[]>("/chats");
+                // 更新日時で新しい順に並べておく
+                list.sort((a, b) => (a.updated_at < b.updated_at ? 1 : -1));
+                setChats(list);
             } finally {
             }
         })();
     }, []);
+
+    function onNewChat() {
+        setCurrentChatId(null);
+        setMessages([]);
+    }
+
+    function onChatClick(id: string) {
+        setCurrentChatId(id);
+        (async () => {
+            try {
+                const list = await apiGetJson<Message[]>(`/chats/${id}/messages`);
+                setMessages(list);
+            } finally {
+            }
+        })();
+    }
 
     return (
         <aside
@@ -69,7 +72,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onToggle, setCurrentChat
                         <Button
                             variant="ghost"
                             className="w-full justify-start gap-2 mb-1"
-                            onClick={() => setCurrentChat(null)}
+                            onClick={() => onNewChat()}
                         >
                             <MessageSquare className="h-4 w-4" /> チャット
                         </Button>
@@ -86,7 +89,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onToggle, setCurrentChat
                                     key={c.id}
                                     variant="ghost"
                                     className="w-full justify-start truncate"
-                                    onClick={() => setCurrentChat(c)}
+                                    onClick={() => onChatClick(c.id)}
                                     title={c.title}
                                 >
                                     <span className="truncate">{c.title || "（無題）"}</span>

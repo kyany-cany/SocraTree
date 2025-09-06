@@ -8,19 +8,11 @@ class GeminiClient
     @api_key = ENV['GEMINI_API_KEY']
   end
 
-  def chat(message)
+  def chat(body)
     response = Faraday.post(ENDPOINT) do |req|
       req.headers['Content-Type'] = 'application/json'
       req.headers['X-goog-api-key'] = @api_key
-      req.body = {
-        contents: [
-          {
-            parts: [
-              { text: message }
-            ]
-          }
-        ]
-      }.to_json
+      req.body = body
     end
 
     parsed = JSON.parse(response.body)

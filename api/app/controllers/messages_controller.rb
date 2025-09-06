@@ -1,87 +1,109 @@
-class MessagesController < ApplicationController
-  before_action :set_conversation
+class MessagesController < BaseController
+  before_action :set_chat_for_index,  only: :index
+  before_action :set_chat_for_create, only: :create
 
-  # GET /api/conversations/:conversation_id/messages?limit=50&before=2025-08-15T00:00:00Z
+  # GET /chats/:chat_id/messages?limit=50&before=...
   def index
-    scope = @conversation.messages # Conversation側の has_many に order(:created_at) が付与済み
-    scope = scope.where("created_at < ?", Time.iso8601(params[:before])) if params[:before].present?
-    scope = scope.limit(limit_param)
+    scope = @chat.messages.order(:created_at)
 
-    render json: scope.as_json(only: [:id, :role, :content, :metadata, :token_in, :token_out, :latency_ms, :error_text, :created_at])
+    if params[:before].present?
+      begin
+        t = Time.iso8601(params[:before])
+        scope = scope.where("created_at < ?", t)
+      rescue ArgumentError
+        return render json: { error: "invalid 'before' timestamp" }, status: :bad_request  # ❹
+      end
+    end
+
+    scope = scope.limit(limit_param)
+    render json: scope.as_json(
+      only: [:id, :role, :content, :metadata, :token_in, :token_out, :latency_ms, :error_text, :created_at]
+    )
   end
 
-  # POST /api/conversations/:conversation_id/messages
-  # body: { "message": "こんにちは", "metadata": {...} }
   def create
+    # 1) ユーザー発話は DB に確定（短いTx）
     user_msg = nil
-    assistant_msg = nil
-
     ActiveRecord::Base.transaction do
-      start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-
-      # 1) ユーザー発話を保存（ログ）
-      user_msg = @conversation.messages.create!(
+      user_msg = @chat.messages.create!(
         role: :user,
         content: message_param,
         metadata: metadata_param
       )
+      # ❷ タイトルが未設定なら最初の発話の先頭を使う（お好みで文字数切り取り）
+      if @chat.title.blank?
+        @chat.update_columns(title: user_msg.content.to_s.strip[0, 60], updated_at: Time.current)
+      end
+    end
 
-      # 2) Gemini呼び出し（サービスへ委譲）
-      llm_result = GeminiChatService.call!(
-        conversation: @conversation,
-        latest_user_message: user_msg
-      )
-      # 期待フォーマット:
-      # { content: "返答", token_in: 123, token_out: 456, latency_ms: 789, model: "gemini-xxx" }
+    # 2) LLM 呼び出しは Tx の外（❶）
+    llm = GeminiService.call!(chat: @chat, latest_user_message: user_msg)
+    assistant_msg = nil
 
-      # 3) アシスタント返答を保存（ログ）
-      assistant_msg = @conversation.messages.create!(
+    # 3) アシスタント発話を保存（短いTx）
+    start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    ActiveRecord::Base.transaction do
+      assistant_msg = @chat.messages.create!(
         role: :assistant,
-        content: llm_result[:content],
-        token_in: llm_result[:token_in],
-        token_out: llm_result[:token_out],
-        latency_ms: llm_result[:latency_ms],
-        metadata: { model: llm_result[:model] }
+        content:   llm[:content],
+        token_in:  llm[:token_in],
+        token_out: llm[:token_out],
+        latency_ms: llm[:latency_ms],
+        metadata: { model: llm[:model] }
       )
-
-      # （任意）往復の合計時間をメタに入れる
       total_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start) * 1000).to_i
       assistant_msg.update_column(:metadata, assistant_msg.metadata.merge(total_ms: total_ms))
     end
 
+    # ❺ 初回作成時に Location を付ける（任意）
+    response.set_header("Location", api_chat_url(@chat)) if request.path == "/api/messages"
+
     render json: {
-      user: user_msg.slice(:id, :role, :content, :created_at),
-      assistant: assistant_msg.slice(:id, :role, :content, :token_in, :token_out, :latency_ms, :created_at)
+      chat:      { id: @chat.id, title: @chat.title, updated_at: @chat.updated_at },
+      user_msg:   { id: user_msg.id, created_at: user_msg.created_at, updated_at: user_msg.updated_at },
+      assistant_msg: { id: assistant_msg.id, role: assistant_msg.role, content: assistant_msg.content, created_at: assistant_msg.created_at },
+      metrics:   { token_in: assistant_msg.token_in, token_out: assistant_msg.token_out, latency_ms: assistant_msg.latency_ms }
     }, status: :created
+
   rescue => e
     Rails.logger.error(e.full_message)
-
-    # 失敗も履歴に残す
-    @conversation.messages.create!(
-      role: :system,
-      content: "エラーが発生しました",
-      error_text: e.message,
-      metadata: { kind: "llm_error" }
-    )
-
+    begin
+      @chat&.messages&.create!(
+        role: :system,
+        content: "エラーが発生しました",
+        error_text: e.message,
+        metadata: { kind: "llm_error" }
+      )
+    rescue StandardError
+    end
     render json: { error: "LLM error", detail: e.message }, status: :bad_gateway
   end
 
   private
 
-  def set_conversation
-    @conversation = Conversation.find(params[:conversation_id])
+  def set_chat_for_index
+    @chat = current_user.chats.find(params.require(:chat_id))
+  end
+
+  def set_chat_for_create
+    @chat = params[:chat_id].present? ?
+              current_user.chats.find(params[:chat_id]) :
+              current_user.chats.create!(title: params[:title].presence || "New chat")
   end
 
   def message_param
-    params.require(:message)
+    params.require(:content)
   end
 
   def metadata_param
-    params[:metadata].is_a?(Hash) ? params[:metadata] : {}
+    params[:metadata].is_a?(ActionController::Parameters) ?
+      params[:metadata].to_unsafe_h :
+      (params[:metadata] || {})
   end
 
   def limit_param
-    (params[:limit] || 50).to_i.clamp(1, 200)
+    n = params[:limit].to_i
+    n = 50 if n <= 0
+    [n, 200].min
   end
-end  
+end
