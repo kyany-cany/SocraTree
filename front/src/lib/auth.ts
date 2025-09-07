@@ -2,7 +2,7 @@ import { API_BASE } from '@/config';
 
 /** 401 を横取りしてグローバル処理したいとき用のラッパ生成器（任意） */
 export function createFetchJSON(onUnauthorized?: () => void) {
-  return async function fetchJSON<T = any>(
+  return async function fetchJSON<T = unknown>(
     input: RequestInfo | URL,
     init: RequestInit = {}
   ): Promise<T> {

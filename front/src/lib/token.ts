@@ -20,7 +20,9 @@ export function setRememberMe(on: boolean) {
   try {
     localStorage.setItem(REMEMBER_KEY, on ? '1' : '0');
     (on ? sessionStorage : localStorage).removeItem(RT_KEY);
-  } catch {}
+  } catch {
+    // Storage access may fail in some environments
+  }
 }
 export function getRememberMe(): boolean {
   try {
@@ -41,7 +43,9 @@ export const Token = {
       try {
         sessionStorage.removeItem(RT_KEY);
         localStorage.removeItem(RT_KEY);
-      } catch {}
+      } catch {
+        // Storage access may fail in some environments
+      }
       return;
     }
     if (typeof t === 'string') {
@@ -62,7 +66,9 @@ export const Token = {
       // 逆側の残骸を削除（Remember=0 なら localStorage をここでも消す）
       try {
         other.removeItem(RT_KEY);
-      } catch {}
+      } catch {
+        // Storage access may fail in some environments
+      }
     }
   },
   get() {
@@ -83,7 +89,9 @@ export const Token = {
     try {
       sessionStorage.removeItem(RT_KEY);
       localStorage.removeItem(RT_KEY);
-    } catch {}
+    } catch {
+      // Storage access may fail in some environments
+    }
   },
 };
 

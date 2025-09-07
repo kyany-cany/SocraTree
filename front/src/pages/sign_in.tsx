@@ -26,8 +26,19 @@ export default function SignIn() {
 
       // 以降は遷移するため setLoading を戻す必要なし
       setRememberMe(remember);
-    } catch (e: any) {
-      setError(e?.body?.error || e.message);
+    } catch (e: unknown) {
+      const error =
+        e &&
+        typeof e === 'object' &&
+        'body' in e &&
+        e.body &&
+        typeof e.body === 'object' &&
+        'error' in e.body
+          ? String(e.body.error)
+          : e instanceof Error
+            ? e.message
+            : 'An error occurred';
+      setError(error);
       setLoading(false);
     }
   }

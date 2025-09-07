@@ -1,25 +1,11 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { getMe } from '@/lib/api';
 import { signOut as auth_signOut } from '@/lib/auth';
 import { revokeTokens, Token } from '@/lib/oauth';
 import type { Me, MeState } from '@/types';
 
-type AuthContext = {
-  me: MeState;
-  setMe: React.Dispatch<React.SetStateAction<MeState>>;
-  refreshMe: () => Promise<void>;
-  signOut: () => Promise<void>;
-  loading: boolean;
-};
-
-const Ctx = createContext<AuthContext | null>(null);
-
-export const useAuth = () => {
-  const c = useContext(Ctx);
-  if (!c) throw new Error('useAuth must be used within AuthProvider');
-  return c;
-};
+import { AuthContext, type AuthContextType } from './auth-context';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [me, setMe] = useState<MeState>(undefined);
@@ -29,8 +15,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const user = (await getMe()) as Me;
       setMe(user);
-    } catch (e: any) {
-      if (e?.status === 401) setMe(null);
+    } catch (e: unknown) {
+      if (e && typeof e === 'object' && 'status' in e && e.status === 401) setMe(null);
       else {
         console.error(e);
         Token.clear();
@@ -61,9 +47,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const value: AuthContext = useMemo(
+  const value: AuthContextType = useMemo(
     () => ({ me, setMe, refreshMe, signOut, loading }),
     [me, loading]
   );
-  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

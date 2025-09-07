@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { useAuth } from '@/lib/auth_provider';
+import { useAuth } from '@/lib/auth-hooks';
 import { exchangeCodeForToken, Token } from '@/lib/oauth';
 
 export default function OAuthCallback() {

@@ -6,7 +6,7 @@ import { ensureAccessToken, Token } from './oauth';
 export async function apiFetch(input: string | URL, init: RequestInit = {}) {
   const at = await ensureAccessToken();
   if (!at) {
-    const e: any = new Error('not authenticated');
+    const e: Error & { status?: number } = new Error('not authenticated');
     e.status = 401;
     throw e;
   }
@@ -37,7 +37,7 @@ export async function apiGetJson<T>(path: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export async function apiPostJson<T>(path: string, body: any): Promise<T> {
+export async function apiPostJson<T>(path: string, body: unknown): Promise<T> {
   const res = await apiFetch(`${API_BASE}${path}`, {
     method: 'POST',
     body: JSON.stringify(body),
@@ -46,7 +46,7 @@ export async function apiPostJson<T>(path: string, body: any): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export async function apiPatchJson<T>(path: string, body: any = {}): Promise<T> {
+export async function apiPatchJson<T>(path: string, body: unknown = {}): Promise<T> {
   const res = await apiFetch(`${API_BASE}${path}`, {
     method: 'PATCH',
     body: JSON.stringify(body),

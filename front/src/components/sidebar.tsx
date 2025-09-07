@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { apiGetJson } from '@/lib/api';
-import { useAuth } from '@/lib/auth_provider';
+import { useAuth } from '@/lib/auth-hooks';
 import type { Chat, Message } from '@/types';
 
 import { ChatListItem } from './ChatListItem';
@@ -40,10 +40,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         // 更新日時で新しい順に並べておく
         list.sort((a, b) => (a.updated_at < b.updated_at ? 1 : -1));
         setChats(list);
-      } finally {
+      } catch (error) {
+        console.error('Failed to fetch chats:', error);
       }
     })();
-  }, []);
+  }, [setChats]);
 
   function onNewChat() {
     setCurrentChatId(null);
@@ -56,7 +57,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
       try {
         const list = await apiGetJson<Message[]>(`/chats/${id}/messages`);
         setMessages(list);
-      } finally {
+      } catch (error) {
+        console.error('Failed to fetch messages:', error);
       }
     })();
   }

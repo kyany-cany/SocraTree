@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
-import { AuthProvider, useAuth } from './lib/auth_provider';
+import { AuthProvider } from './lib/auth_provider';
+import { useAuth } from './lib/auth-hooks';
 import OAuthCallback from './pages/callback';
 import { ChatPage } from './pages/Chat';
 import ConsentPage from './pages/consent';

@@ -1,6 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
-import { useAuth } from './lib/auth_provider';
+import { useAuth } from './lib/auth-hooks';
 
 const CONSENT_VERSION = 'v1'; // 文面更新時に上げる
 
