@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { apiFetch } from "../lib/api"; // 前メッセージのAPI例
-import { useAuth } from "../lib/auth_provider";
-import { API_BASE } from "@/lib/config";
+import { apiFetch } from "@/lib/api"; // 前メッセージのAPI例
+import { useAuth } from "@/lib/auth_provider";
+import { API_BASE } from "@/config";
 
 const CONSENT_VERSION = "v1";
 

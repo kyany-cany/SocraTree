@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import type { Me, MeState } from "../types";
-import { signOut as auth_signOut } from "../lib/auth";
-import { revokeTokens, Token } from "./oauth";
-import { getMe } from "./api";
+import type { Me, MeState } from "@/types";
+import { signOut as auth_signOut } from "@/lib/auth";
+import { revokeTokens, Token } from "@/lib/oauth";
+import { getMe } from "@/lib/api";
 
 type AuthContext = {
     me: MeState;

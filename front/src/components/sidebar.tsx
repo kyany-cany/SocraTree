@@ -1,10 +1,10 @@
-import { useAuth } from "../lib/auth_provider"
+import { useAuth } from "@/lib/auth_provider"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { ChevronLeft, ChevronRight, MessageSquare, Settings } from "lucide-react"
 import type { Chat, Message } from "@/types"
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { apiGetJson } from "@/lib/api"
 import { ChatListItem } from "./ChatListItem"
 

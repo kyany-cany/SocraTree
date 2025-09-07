@@ -1,15 +1,10 @@
-import { useEffect, useState, useRef } from "react";
-import { ChatMessage } from "../components/chatmessage";
-import { ChatInput } from "../components/chatinput";
-import { Sidebar } from "../components/sidebar";
-import { ChatDeleteDialog } from "../components/ChatDeleteDialog";
+import { useState, useRef } from "react";
+import { ChatMessage } from "@/components/chatmessage";
+import { ChatInput } from "@/components/chatinput";
+import { Sidebar } from "@/components/sidebar";
+import { ChatDeleteDialog } from "@/components/ChatDeleteDialog";
 import type { Chat, Message, MessageResponse } from "@/types";
 import { apiPostJson, archiveChat, deleteChat } from "@/lib/api";
-
-// const dummyMessages: Message[] = [
-//     { role: "user", content: "こんにちは" },
-//     { role: "assistant", content: "こんにちは！今日はどのようなご用件でしょうか？" },
-// ];
 
 export const ChatPage = () => {
     const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -17,7 +12,7 @@ export const ChatPage = () => {
     const [currentChatId, setCurrentChatId] = useState<string | null>(null);
     const isSendingRef = useRef<boolean>(false);
     const [messages, setMessages] = useState<Message[]>([]);
-    
+
     // 削除ダイアログの状態
     const [deleteDialog, setDeleteDialog] = useState<{
         open: boolean
@@ -95,7 +90,7 @@ export const ChatPage = () => {
     const handleChatDelete = (chatId: string) => {
         const chat = chats.find(c => c.id === chatId);
         if (!chat) return;
-        
+
         setDeleteDialog({
             open: true,
             chatId: chatId,
@@ -105,20 +100,20 @@ export const ChatPage = () => {
 
     const handleDeleteConfirm = async (type: 'archive' | 'hard') => {
         if (!deleteDialog.chatId) return;
-        
+
         setDeletingChatId(deleteDialog.chatId);
         const chatToDelete = deleteDialog.chatId;
-        
+
         // 楽観的UI更新
         const originalChats = chats;
         setChats(prev => prev.filter(chat => chat.id !== chatToDelete));
-        
+
         // 現在のチャットが削除対象の場合は画面をクリア
         if (currentChatId === chatToDelete) {
             setCurrentChatId(null);
             setMessages([]);
         }
-        
+
         try {
             if (type === 'archive') {
                 await archiveChat(chatToDelete);
@@ -199,7 +194,7 @@ export const ChatPage = () => {
                     </div>
                 )}
             </main>
-            
+
             <ChatDeleteDialog
                 open={deleteDialog.open}
                 onOpenChange={(open) => setDeleteDialog(prev => ({ ...prev, open }))}

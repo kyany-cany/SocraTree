@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { signIn } from "../lib/auth";
-import { beginOAuth, getRememberMe, setRememberMe } from "../lib/oauth";
+import { signIn } from "@/lib/auth";
+import { beginOAuth, getRememberMe, setRememberMe } from "@/lib/oauth";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";

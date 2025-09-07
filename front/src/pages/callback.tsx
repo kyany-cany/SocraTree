@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { exchangeCodeForToken, Token } from "../lib/oauth";
-import { useAuth } from "../lib/auth_provider";
+import { exchangeCodeForToken, Token } from "@/lib/oauth";
+import { useAuth } from "@/lib/auth_provider";
 
 export default function OAuthCallback() {
     const nav = useNavigate();

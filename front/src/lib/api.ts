@@ -1,5 +1,5 @@
 import type { Me } from "@/types";
-import { API_BASE } from "./config";
+import { API_BASE } from "@/config";
 import { ensureAccessToken, Token } from "./oauth";
 
 export async function apiFetch(input: string | URL, init: RequestInit = {}) {
@@ -46,7 +46,10 @@ export async function apiPostJson<T>(path: string, body: any): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export async function apiPatchJson<T>(path: string, body: any = {}): Promise<T> {
+export async function apiPatchJson<T>(
+  path: string,
+  body: any = {}
+): Promise<T> {
   const res = await apiFetch(`${API_BASE}${path}`, {
     method: "PATCH",
     body: JSON.stringify(body),
@@ -68,11 +71,15 @@ export async function getMe(): Promise<Me> {
 }
 
 // ---- チャット削除操作 ----
-export async function archiveChat(chatId: string): Promise<{ id: string; archived: boolean; archived_at: string }> {
+export async function archiveChat(
+  chatId: string
+): Promise<{ id: string; archived: boolean; archived_at: string }> {
   return apiPatchJson(`/chats/${chatId}/archive`);
 }
 
-export async function restoreChat(chatId: string): Promise<{ id: string; archived: boolean; restored_at: string }> {
+export async function restoreChat(
+  chatId: string
+): Promise<{ id: string; archived: boolean; restored_at: string }> {
   return apiPatchJson(`/chats/${chatId}/restore`);
 }
 
