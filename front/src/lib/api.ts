@@ -46,7 +46,36 @@ export async function apiPostJson<T>(path: string, body: any): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+export async function apiPatchJson<T>(path: string, body: any = {}): Promise<T> {
+  const res = await apiFetch(`${API_BASE}${path}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`PATCH ${path} -> ${res.status}`);
+  return res.json() as Promise<T>;
+}
+
+export async function apiDeleteJson(path: string): Promise<void> {
+  const res = await apiFetch(`${API_BASE}${path}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error(`DELETE ${path} -> ${res.status}`);
+}
+
 // ---- ユーザー情報取得 ----
 export async function getMe(): Promise<Me> {
   return apiGetJson<Me>("/me");
+}
+
+// ---- チャット削除操作 ----
+export async function archiveChat(chatId: string): Promise<{ id: string; archived: boolean; archived_at: string }> {
+  return apiPatchJson(`/chats/${chatId}/archive`);
+}
+
+export async function restoreChat(chatId: string): Promise<{ id: string; archived: boolean; restored_at: string }> {
+  return apiPatchJson(`/chats/${chatId}/restore`);
+}
+
+export async function deleteChat(chatId: string): Promise<void> {
+  return apiDeleteJson(`/chats/${chatId}`);
 }

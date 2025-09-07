@@ -26,7 +26,9 @@ Rails.application.routes.draw do
 
   resource :consent, only: [:create], controller: "consent"
 
-  resources :chats, only: [:index] do
+  resources :chats, only: [:index, :destroy] do
+    patch :archive, on: :member
+    patch :restore, on: :member
     resources :messages, only: [:index, :create]
   end
 

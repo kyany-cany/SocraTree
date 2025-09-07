@@ -2,8 +2,9 @@ import { useEffect, useState, useRef } from "react";
 import { ChatMessage } from "../components/chatmessage";
 import { ChatInput } from "../components/chatinput";
 import { Sidebar } from "../components/sidebar";
+import { ChatDeleteDialog } from "../components/ChatDeleteDialog";
 import type { Chat, Message, MessageResponse } from "@/types";
-import { apiGetJson, apiPostJson } from "@/lib/api";
+import { apiPostJson, archiveChat, deleteChat } from "@/lib/api";
 
 // const dummyMessages: Message[] = [
 //     { role: "user", content: "こんにちは" },
@@ -16,6 +17,18 @@ export const ChatPage = () => {
     const [currentChatId, setCurrentChatId] = useState<string | null>(null);
     const isSendingRef = useRef<boolean>(false);
     const [messages, setMessages] = useState<Message[]>([]);
+    
+    // 削除ダイアログの状態
+    const [deleteDialog, setDeleteDialog] = useState<{
+        open: boolean
+        chatId: string | null
+        chatTitle: string
+    }>({
+        open: false,
+        chatId: null,
+        chatTitle: ''
+    });
+    const [deletingChatId, setDeletingChatId] = useState<string | null>(null);
 
     const handleSend = async (text: string) => {
         if (isSendingRef.current) return;
@@ -79,6 +92,56 @@ export const ChatPage = () => {
         }
     };
 
+    const handleChatDelete = (chatId: string) => {
+        const chat = chats.find(c => c.id === chatId);
+        if (!chat) return;
+        
+        setDeleteDialog({
+            open: true,
+            chatId: chatId,
+            chatTitle: chat.title || '（無題）'
+        });
+    };
+
+    const handleDeleteConfirm = async (type: 'archive' | 'hard') => {
+        if (!deleteDialog.chatId) return;
+        
+        setDeletingChatId(deleteDialog.chatId);
+        const chatToDelete = deleteDialog.chatId;
+        
+        // 楽観的UI更新
+        const originalChats = chats;
+        setChats(prev => prev.filter(chat => chat.id !== chatToDelete));
+        
+        // 現在のチャットが削除対象の場合は画面をクリア
+        if (currentChatId === chatToDelete) {
+            setCurrentChatId(null);
+            setMessages([]);
+        }
+        
+        try {
+            if (type === 'archive') {
+                await archiveChat(chatToDelete);
+                console.log('Chat archived successfully');
+            } else {
+                await deleteChat(chatToDelete);
+                console.log('Chat deleted successfully');
+            }
+        } catch (error) {
+            console.error('Failed to delete chat:', error);
+            // エラー時はロールバック
+            setChats(originalChats);
+            if (currentChatId === chatToDelete) {
+                setCurrentChatId(chatToDelete);
+                // 必要に応じてメッセージも復元
+            }
+            alert('チャットの削除に失敗しました');
+        } finally {
+            setDeletingChatId(null);
+            setDeleteDialog({ open: false, chatId: null, chatTitle: '' });
+        }
+    };
+
     // useEffect(() => {
     //     if (!currentChatId) {
     //         setMessages([]);
@@ -106,6 +169,8 @@ export const ChatPage = () => {
                 setChats={setChats}
                 setCurrentChatId={setCurrentChatId}
                 setMessages={setMessages}
+                currentChatId={currentChatId}
+                onChatDelete={handleChatDelete}
             />
 
             <main className="flex-1 flex flex-col overflow-hidden">
@@ -134,6 +199,14 @@ export const ChatPage = () => {
                     </div>
                 )}
             </main>
+            
+            <ChatDeleteDialog
+                open={deleteDialog.open}
+                onOpenChange={(open) => setDeleteDialog(prev => ({ ...prev, open }))}
+                chatTitle={deleteDialog.chatTitle}
+                onConfirm={handleDeleteConfirm}
+                isDeleting={deletingChatId !== null}
+            />
         </div>
     );
 };

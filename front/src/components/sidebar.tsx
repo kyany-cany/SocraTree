@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, MessageSquare, Settings } from "lucide-react
 import type { Chat, Message } from "@/types"
 import { useEffect, useState } from "react"
 import { apiGetJson } from "@/lib/api"
+import { ChatListItem } from "./ChatListItem"
 
 type SidebarProps = {
     open: boolean
@@ -14,9 +15,11 @@ type SidebarProps = {
     setChats: React.Dispatch<React.SetStateAction<Chat[]>>
     setCurrentChatId: React.Dispatch<React.SetStateAction<string | null>>
     setMessages: React.Dispatch<React.SetStateAction<Message[]>>
+    currentChatId: string | null
+    onChatDelete: (chatId: string) => void
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ open, onToggle, chats, setChats, setCurrentChatId, setMessages }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ open, onToggle, chats, setChats, setCurrentChatId, setMessages, currentChatId, onChatDelete }) => {
     const { signOut } = useAuth()
 
     useEffect(() => {
@@ -85,15 +88,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onToggle, chats, setChat
                         </Button>
                         <div className="px-2 pb-4 space-y-1">
                             {chats.map((c) => (
-                                <Button
+                                <ChatListItem
                                     key={c.id}
-                                    variant="ghost"
-                                    className="w-full justify-start truncate"
-                                    onClick={() => onChatClick(c.id)}
-                                    title={c.title}
-                                >
-                                    <span className="truncate">{c.title || "（無題）"}</span>
-                                </Button>
+                                    chat={c}
+                                    isActive={currentChatId === c.id}
+                                    onClick={onChatClick}
+                                    onDelete={onChatDelete}
+                                />
                             ))}
                             {chats.length === 0 && (
                                 <div className="text-xs text-muted-foreground px-2 py-3">
