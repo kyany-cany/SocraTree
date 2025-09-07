@@ -1,6 +1,7 @@
-import React from 'react'
-import { Trash2, Archive, AlertTriangle } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { AlertTriangle, Archive, Trash2 } from 'lucide-react';
+import React from 'react';
+
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -8,14 +9,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from '@/components/ui/dialog';
 
 interface ChatDeleteDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  chatTitle: string
-  onConfirm: (type: 'archive' | 'hard') => Promise<void>
-  isDeleting: boolean
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  chatTitle: string;
+  onConfirm: (type: 'archive' | 'hard') => Promise<void>;
+  isDeleting: boolean;
 }
 
 export function ChatDeleteDialog({
@@ -33,11 +34,9 @@ export function ChatDeleteDialog({
             <AlertTriangle className="h-5 w-5 text-amber-500" />
             チャットを削除
           </DialogTitle>
-          <DialogDescription>
-            「{chatTitle}」をどのように削除しますか？
-          </DialogDescription>
+          <DialogDescription>「{chatTitle}」をどのように削除しますか？</DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-3">
           <div className="border rounded-lg p-4">
             <div className="flex items-center gap-3 mb-2">
@@ -48,7 +47,7 @@ export function ChatDeleteDialog({
               チャットをアーカイブします。後で復元することができます。
             </p>
           </div>
-          
+
           <div className="border rounded-lg p-4 border-red-200">
             <div className="flex items-center gap-3 mb-2">
               <Trash2 className="h-4 w-4 text-red-500" />
@@ -61,11 +60,7 @@ export function ChatDeleteDialog({
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isDeleting}
-          >
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isDeleting}>
             キャンセル
           </Button>
           <Button
@@ -87,11 +82,7 @@ export function ChatDeleteDialog({
               </>
             )}
           </Button>
-          <Button
-            variant="destructive"
-            onClick={() => onConfirm('hard')}
-            disabled={isDeleting}
-          >
+          <Button variant="destructive" onClick={() => onConfirm('hard')} disabled={isDeleting}>
             {isDeleting ? (
               <>
                 <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-red-300 border-t-red-600" />
@@ -107,5 +98,5 @@ export function ChatDeleteDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

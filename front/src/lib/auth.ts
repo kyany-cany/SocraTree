@@ -1,4 +1,4 @@
-import { API_BASE } from "@/config";
+import { API_BASE } from '@/config';
 
 /** 401 を横取りしてグローバル処理したいとき用のラッパ生成器（任意） */
 export function createFetchJSON(onUnauthorized?: () => void) {
@@ -7,18 +7,16 @@ export function createFetchJSON(onUnauthorized?: () => void) {
     init: RequestInit = {}
   ): Promise<T> {
     const res = await fetch(input, {
-      credentials: "include", // Cookie送受信
-      headers: { Accept: "application/json", ...(init.headers || {}) },
+      credentials: 'include', // Cookie送受信
+      headers: { Accept: 'application/json', ...(init.headers || {}) },
       ...init,
     });
-    const ct = res.headers.get("content-type") || "";
-    const body = ct.includes("application/json")
-      ? await res.json()
-      : await res.text();
+    const ct = res.headers.get('content-type') || '';
+    const body = ct.includes('application/json') ? await res.json() : await res.text();
 
     if (!res.ok) {
       if (res.status === 401 && onUnauthorized) onUnauthorized();
-      throw Object.assign(new Error("HTTP " + res.status), {
+      throw Object.assign(new Error('HTTP ' + res.status), {
         status: res.status,
         body,
       });
@@ -40,13 +38,13 @@ async function getCsrf(): Promise<string> {
 export async function signIn(email: string, password: string) {
   const csrf = await getCsrf();
   const body = new URLSearchParams();
-  body.set("user[email]", email);
-  body.set("user[password]", password);
+  body.set('user[email]', email);
+  body.set('user[password]', password);
   return fetchJSON(`${API_BASE}/users/sign_in`, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      "X-CSRF-Token": csrf,
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-CSRF-Token': csrf,
     },
     body,
   });
@@ -56,8 +54,8 @@ export async function signIn(email: string, password: string) {
 export async function signOut() {
   const csrf = await getCsrf();
   return fetchJSON(`${API_BASE}/users/sign_out`, {
-    method: "DELETE",
-    headers: { "X-CSRF-Token": csrf },
+    method: 'DELETE',
+    headers: { 'X-CSRF-Token': csrf },
   });
 }
 

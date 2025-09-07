@@ -1,11 +1,12 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import SignIn from "./pages/sign_in";
-import { ChatPage } from "./pages/Chat";
-import { PrivateRoute } from "./private_routes";
-import { AuthProvider, useAuth } from "./lib/auth_provider";
-import OAuthCallback from "./pages/callback";
-import { Splash } from "./pages/splash";
-import ConsentPage from "./pages/consent";
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+
+import { AuthProvider, useAuth } from './lib/auth_provider';
+import OAuthCallback from './pages/callback';
+import { ChatPage } from './pages/Chat';
+import ConsentPage from './pages/consent';
+import SignIn from './pages/sign_in';
+import { Splash } from './pages/splash';
+import { PrivateRoute } from './private_routes';
 
 function Gate() {
   const { loading } = useAuth();
@@ -25,7 +26,7 @@ function AppRoutes() {
         <Route path="/chat" element={<ChatPage />} />
       </Route>
 
-      <Route path="*" element={<Navigate to={me ? "/chat" : "/login"} replace />} />
+      <Route path="*" element={<Navigate to={me ? '/chat' : '/login'} replace />} />
     </Routes>
   );
 }

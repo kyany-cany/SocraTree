@@ -1,4 +1,4 @@
-import type { OAuthClientEndpoints, TokenSet } from "@/types";
+import type { OAuthClientEndpoints, TokenSet } from '@/types';
 
 // ---- Token（メモリ + sessionStorageでrefresh保持、期限先読み）----
 let CLIENT: OAuthClientEndpoints | null = null;
@@ -6,27 +6,25 @@ export function configureOAuthClient(cfg: OAuthClientEndpoints) {
   CLIENT = cfg;
 }
 
-const RT_KEY = "oauth_refresh_token";
-const REMEMBER_KEY = "oauth_remember_me";
+const RT_KEY = 'oauth_refresh_token';
+const REMEMBER_KEY = 'oauth_remember_me';
 
 function getRefreshStorage(): Storage {
   try {
-    return localStorage.getItem(REMEMBER_KEY) === "1"
-      ? localStorage
-      : sessionStorage;
+    return localStorage.getItem(REMEMBER_KEY) === '1' ? localStorage : sessionStorage;
   } catch {
     return sessionStorage;
   }
 }
 export function setRememberMe(on: boolean) {
   try {
-    localStorage.setItem(REMEMBER_KEY, on ? "1" : "0");
+    localStorage.setItem(REMEMBER_KEY, on ? '1' : '0');
     (on ? sessionStorage : localStorage).removeItem(RT_KEY);
   } catch {}
 }
 export function getRememberMe(): boolean {
   try {
-    return localStorage.getItem(REMEMBER_KEY) === "1";
+    return localStorage.getItem(REMEMBER_KEY) === '1';
   } catch {
     return false;
   }
@@ -46,7 +44,7 @@ export const Token = {
       } catch {}
       return;
     }
-    if (typeof t === "string") {
+    if (typeof t === 'string') {
       accessToken = t;
       return;
     }
@@ -74,9 +72,7 @@ export const Token = {
     const primary = getRefreshStorage().getItem(RT_KEY);
     if (primary) return primary;
     // 設定変更の残骸も拾う
-    return (
-      getRefreshStorage() === localStorage ? sessionStorage : localStorage
-    ).getItem(RT_KEY);
+    return (getRefreshStorage() === localStorage ? sessionStorage : localStorage).getItem(RT_KEY);
   },
   isExpired() {
     return !accessToken || Date.now() >= expiresAtMs;
@@ -93,21 +89,21 @@ export const Token = {
 
 // ---- リフレッシュ / 付随ユーティリティ ----
 export async function refreshWithOAuth(refresh_token?: string | null) {
-  if (!CLIENT) throw new Error("OAuth client is not configured");
+  if (!CLIENT) throw new Error('OAuth client is not configured');
   const rt = refresh_token ?? Token.getRefresh();
   if (!rt) return null;
 
   const body = new URLSearchParams({
-    grant_type: "refresh_token",
+    grant_type: 'refresh_token',
     refresh_token: rt,
     client_id: CLIENT.clientId,
   });
 
   const res = await fetch(CLIENT.tokenUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body,
-    credentials: "omit",
+    credentials: 'omit',
   });
   if (!res.ok) return null;
   const json: TokenSet = await res.json();
@@ -135,13 +131,13 @@ export async function ensureAccessToken(): Promise<string | null> {
 }
 
 async function revokeRaw(token: string) {
-  if (!CLIENT) throw new Error("OAuth client is not configured");
+  if (!CLIENT) throw new Error('OAuth client is not configured');
   const body = new URLSearchParams({ token, client_id: CLIENT.clientId });
   await fetch(CLIENT.revokeUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body,
-    credentials: "omit",
+    credentials: 'omit',
   });
 }
 

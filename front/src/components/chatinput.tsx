@@ -1,44 +1,43 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { useState } from 'react';
 
-export const ChatInput: React.FC<{ onSend: (text: string) => void }> = ({
-    onSend,
-}) => {
-    const [text, setText] = useState("");
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 
-    const send = () => {
-        if (!text.trim()) return;
-        onSend(text);
-        setText("");
-    };
+export const ChatInput: React.FC<{ onSend: (text: string) => void }> = ({ onSend }) => {
+  const [text, setText] = useState('');
 
-    return (
-        <div className="p-4 flex gap-2 border-t">
-            <Textarea
-                className="resize-none"
-                placeholder="メッセージを入力"
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                onKeyDown={(e) => {
-                    if (e.nativeEvent.isComposing) return;
+  const send = () => {
+    if (!text.trim()) return;
+    onSend(text);
+    setText('');
+  };
 
-                    if (e.key === "Enter") {
-                        if (e.shiftKey) {
-                            return;
-                        }
-                        e.preventDefault();
-                        send();
-                    }
-                }}
-            />
-            <Button
-                variant="default"
-                // className="bg-blue-500 text-white px-4 py-2 rounded"
-                onClick={send}
-            >
-                送信
-            </Button>
-        </div>
-    );
+  return (
+    <div className="p-4 flex gap-2 border-t">
+      <Textarea
+        className="resize-none"
+        placeholder="メッセージを入力"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.nativeEvent.isComposing) return;
+
+          if (e.key === 'Enter') {
+            if (e.shiftKey) {
+              return;
+            }
+            e.preventDefault();
+            send();
+          }
+        }}
+      />
+      <Button
+        variant="default"
+        // className="bg-blue-500 text-white px-4 py-2 rounded"
+        onClick={send}
+      >
+        送信
+      </Button>
+    </div>
+  );
 };

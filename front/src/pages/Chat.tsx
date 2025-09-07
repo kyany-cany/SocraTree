@@ -1,207 +1,222 @@
-import { useState, useRef } from "react";
-import { ChatMessage } from "@/components/chatmessage";
-import { ChatInput } from "@/components/chatinput";
-import { Sidebar } from "@/components/sidebar";
-import { ChatDeleteDialog } from "@/components/ChatDeleteDialog";
-import type { Chat, Message, MessageResponse } from "@/types";
-import { apiPostJson, archiveChat, deleteChat } from "@/lib/api";
+import { useRef, useState } from 'react';
+
+import { ChatDeleteDialog } from '@/components/ChatDeleteDialog';
+import { ChatInput } from '@/components/chatinput';
+import { ChatMessage } from '@/components/chatmessage';
+import { Sidebar } from '@/components/sidebar';
+import { apiPostJson, archiveChat, deleteChat } from '@/lib/api';
+import type { Chat, Message, MessageResponse } from '@/types';
 
 export const ChatPage = () => {
-    const [sidebarOpen, setSidebarOpen] = useState(true);
-    const [chats, setChats] = useState<Chat[]>([]);
-    const [currentChatId, setCurrentChatId] = useState<string | null>(null);
-    const isSendingRef = useRef<boolean>(false);
-    const [messages, setMessages] = useState<Message[]>([]);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [currentChatId, setCurrentChatId] = useState<string | null>(null);
+  const isSendingRef = useRef<boolean>(false);
+  const [messages, setMessages] = useState<Message[]>([]);
 
-    // 削除ダイアログの状態
-    const [deleteDialog, setDeleteDialog] = useState<{
-        open: boolean
-        chatId: string | null
-        chatTitle: string
-    }>({
-        open: false,
-        chatId: null,
-        chatTitle: ''
+  // 削除ダイアログの状態
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean;
+    chatId: string | null;
+    chatTitle: string;
+  }>({
+    open: false,
+    chatId: null,
+    chatTitle: '',
+  });
+  const [deletingChatId, setDeletingChatId] = useState<string | null>(null);
+
+  const handleSend = async (text: string) => {
+    if (isSendingRef.current) return;
+    isSendingRef.current = true;
+    const existingChatId = currentChatId;
+
+    // 新規なら一時IDを作成
+    let chatTempId = existingChatId;
+    if (!existingChatId) {
+      chatTempId = crypto.randomUUID();
+      const tempChat: Chat = { id: chatTempId, title: 'New Chat', created_at: '', updated_at: '' };
+      setChats((prev) => [tempChat, ...prev]);
+      setCurrentChatId(chatTempId);
+    }
+
+    const tempMessageId = crypto.randomUUID();
+    const userMessage: Message = {
+      role: 'user',
+      content: text,
+      id: tempMessageId,
+      created_at: '',
+      updated_at: '',
+    };
+    setMessages((prev) => [...prev, userMessage]);
+
+    try {
+      const url = currentChatId ? `/chats/${currentChatId}/messages` : '/messages';
+      const res = await apiPostJson<MessageResponse>(url, { content: text });
+      console.log(res);
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === tempMessageId
+            ? {
+                role: 'user',
+                content: text,
+                id: res.user_msg.id,
+                created_at: res.user_msg.created_at,
+                updated_at: res.user_msg.updated_at,
+              }
+            : m
+        )
+      );
+
+      const assistantMessage: Message = {
+        role: 'assistant',
+        content: res.assistant_msg.content,
+        id: res.assistant_msg.id,
+        created_at: res.assistant_msg.created_at,
+        updated_at: res.assistant_msg.updated_at,
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
+
+      if (chatTempId !== res.chat.id) {
+        setChats((prev) => prev.map((c) => (c.id === chatTempId ? res.chat : c)));
+        setCurrentChatId(res.chat.id);
+      } else {
+        setChats((prev) =>
+          prev.map((c) => (c.id === chatTempId ? { ...c, updated_at: res.chat.updated_at } : c))
+        );
+      }
+    } catch (e) {
+      console.error(e);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content: 'エラーが発生しました',
+          created_at: '',
+          updated_at: '',
+        },
+      ]);
+    } finally {
+      isSendingRef.current = false;
+    }
+  };
+
+  const handleChatDelete = (chatId: string) => {
+    const chat = chats.find((c) => c.id === chatId);
+    if (!chat) return;
+
+    setDeleteDialog({
+      open: true,
+      chatId: chatId,
+      chatTitle: chat.title || '（無題）',
     });
-    const [deletingChatId, setDeletingChatId] = useState<string | null>(null);
+  };
 
-    const handleSend = async (text: string) => {
-        if (isSendingRef.current) return;
-        isSendingRef.current = true;
-        const existingChatId = currentChatId;
+  const handleDeleteConfirm = async (type: 'archive' | 'hard') => {
+    if (!deleteDialog.chatId) return;
 
-        // 新規なら一時IDを作成
-        let chatTempId = existingChatId;
-        if (!existingChatId) {
-            chatTempId = crypto.randomUUID();
-            const tempChat: Chat = { id: chatTempId, title: "New Chat", created_at: "", updated_at: "" };
-            setChats((prev) => [tempChat, ...prev]);
-            setCurrentChatId(chatTempId);
-        }
+    setDeletingChatId(deleteDialog.chatId);
+    const chatToDelete = deleteDialog.chatId;
 
-        const tempMessageId = crypto.randomUUID();
-        const userMessage: Message = { role: "user", content: text, id: tempMessageId, created_at: "", updated_at: "" };
-        setMessages((prev) => [...prev, userMessage]);
+    // 楽観的UI更新
+    const originalChats = chats;
+    setChats((prev) => prev.filter((chat) => chat.id !== chatToDelete));
 
-        try {
-            const url = currentChatId ? `/chats/${currentChatId}/messages` : "/messages";
-            const res = await apiPostJson<MessageResponse>(url, { content: text });
-            console.log(res);
-            setMessages((prev) =>
-                prev.map((m) =>
-                    m.id === tempMessageId
-                        ? {
-                            role: "user",
-                            content: text,
-                            id: res.user_msg.id,
-                            created_at: res.user_msg.created_at,
-                            updated_at: res.user_msg.updated_at,
-                        }
-                        : m
-                )
-            );
+    // 現在のチャットが削除対象の場合は画面をクリア
+    if (currentChatId === chatToDelete) {
+      setCurrentChatId(null);
+      setMessages([]);
+    }
 
-            const assistantMessage: Message = {
-                role: "assistant",
-                content: res.assistant_msg.content,
-                id: res.assistant_msg.id,
-                created_at: res.assistant_msg.created_at,
-                updated_at: res.assistant_msg.updated_at
-            };
-            setMessages((prev) => [...prev, assistantMessage]);
+    try {
+      if (type === 'archive') {
+        await archiveChat(chatToDelete);
+        console.log('Chat archived successfully');
+      } else {
+        await deleteChat(chatToDelete);
+        console.log('Chat deleted successfully');
+      }
+    } catch (error) {
+      console.error('Failed to delete chat:', error);
+      // エラー時はロールバック
+      setChats(originalChats);
+      if (currentChatId === chatToDelete) {
+        setCurrentChatId(chatToDelete);
+        // 必要に応じてメッセージも復元
+      }
+      alert('チャットの削除に失敗しました');
+    } finally {
+      setDeletingChatId(null);
+      setDeleteDialog({ open: false, chatId: null, chatTitle: '' });
+    }
+  };
 
-            if (chatTempId !== res.chat.id) {
-                setChats(prev => prev.map(c => (c.id === chatTempId ? res.chat : c)));
-                setCurrentChatId(res.chat.id);
-            } else {
-                setChats(prev => prev.map(c => (c.id === chatTempId ? { ...c, updated_at: res.chat.updated_at } : c)));
-            }
-        } catch (e) {
-            console.error(e);
-            setMessages(prev => [
-                ...prev,
-                { id: crypto.randomUUID(), role: "assistant", content: "エラーが発生しました", created_at: "", updated_at: "" },
-            ]);
-        } finally {
-            isSendingRef.current = false;
-        }
-    };
+  // useEffect(() => {
+  //     if (!currentChatId) {
+  //         setMessages([]);
+  //         return;
+  //     }
+  //     if (!isSendingRef.current && currentChatId) {
+  //         (async () => {
+  //             try {
+  //                 const list = await apiGetJson<Message[]>(`/chats/${currentChatId}/messages`);
+  //                 setMessages(list);
+  //             } finally {
+  //             }
+  //         })();
+  //     } else {
+  //         return;
+  //     }
+  // }, [currentChatId]);
 
-    const handleChatDelete = (chatId: string) => {
-        const chat = chats.find(c => c.id === chatId);
-        if (!chat) return;
+  return (
+    <div className="flex h-full overflow-hidden">
+      <Sidebar
+        open={sidebarOpen}
+        onToggle={() => setSidebarOpen((prev) => !prev)}
+        chats={chats}
+        setChats={setChats}
+        setCurrentChatId={setCurrentChatId}
+        setMessages={setMessages}
+        currentChatId={currentChatId}
+        onChatDelete={handleChatDelete}
+      />
 
-        setDeleteDialog({
-            open: true,
-            chatId: chatId,
-            chatTitle: chat.title || '（無題）'
-        });
-    };
+      <main className="flex-1 flex flex-col overflow-hidden">
+        {currentChatId ? (
+          <>
+            {/* メッセージ一覧 */}
+            <div className="flex-1 overflow-y-auto p-4">
+              {messages.map((msg) => (
+                <ChatMessage key={msg.id} message={msg} />
+              ))}
+            </div>
+            {/* 入力欄 */}
+            <div className="border-t">
+              <ChatInput onSend={handleSend} />
+            </div>
+          </>
+        ) : (
+          // currentChat が null のとき中央に入力欄
+          <div className="flex-1 grid place-items-center p-4">
+            <div className="w-full max-w-2xl">
+              <div className="text-center text-sm text-muted-foreground mb-3">
+                左のリストからチャットを選ぶか、新しく入力して開始してください
+              </div>
+              <ChatInput onSend={handleSend} />
+            </div>
+          </div>
+        )}
+      </main>
 
-    const handleDeleteConfirm = async (type: 'archive' | 'hard') => {
-        if (!deleteDialog.chatId) return;
-
-        setDeletingChatId(deleteDialog.chatId);
-        const chatToDelete = deleteDialog.chatId;
-
-        // 楽観的UI更新
-        const originalChats = chats;
-        setChats(prev => prev.filter(chat => chat.id !== chatToDelete));
-
-        // 現在のチャットが削除対象の場合は画面をクリア
-        if (currentChatId === chatToDelete) {
-            setCurrentChatId(null);
-            setMessages([]);
-        }
-
-        try {
-            if (type === 'archive') {
-                await archiveChat(chatToDelete);
-                console.log('Chat archived successfully');
-            } else {
-                await deleteChat(chatToDelete);
-                console.log('Chat deleted successfully');
-            }
-        } catch (error) {
-            console.error('Failed to delete chat:', error);
-            // エラー時はロールバック
-            setChats(originalChats);
-            if (currentChatId === chatToDelete) {
-                setCurrentChatId(chatToDelete);
-                // 必要に応じてメッセージも復元
-            }
-            alert('チャットの削除に失敗しました');
-        } finally {
-            setDeletingChatId(null);
-            setDeleteDialog({ open: false, chatId: null, chatTitle: '' });
-        }
-    };
-
-    // useEffect(() => {
-    //     if (!currentChatId) {
-    //         setMessages([]);
-    //         return;
-    //     }
-    //     if (!isSendingRef.current && currentChatId) {
-    //         (async () => {
-    //             try {
-    //                 const list = await apiGetJson<Message[]>(`/chats/${currentChatId}/messages`);
-    //                 setMessages(list);
-    //             } finally {
-    //             }
-    //         })();
-    //     } else {
-    //         return;
-    //     }
-    // }, [currentChatId]);
-
-    return (
-        <div className="flex h-full overflow-hidden">
-            <Sidebar
-                open={sidebarOpen}
-                onToggle={() => setSidebarOpen((prev) => !prev)}
-                chats={chats}
-                setChats={setChats}
-                setCurrentChatId={setCurrentChatId}
-                setMessages={setMessages}
-                currentChatId={currentChatId}
-                onChatDelete={handleChatDelete}
-            />
-
-            <main className="flex-1 flex flex-col overflow-hidden">
-                {currentChatId ? (
-                    <>
-                        {/* メッセージ一覧 */}
-                        <div className="flex-1 overflow-y-auto p-4">
-                            {messages.map((msg) => (
-                                <ChatMessage key={msg.id} message={msg} />
-                            ))}
-                        </div>
-                        {/* 入力欄 */}
-                        <div className="border-t">
-                            <ChatInput onSend={handleSend} />
-                        </div>
-                    </>
-                ) : (
-                    // currentChat が null のとき中央に入力欄
-                    <div className="flex-1 grid place-items-center p-4">
-                        <div className="w-full max-w-2xl">
-                            <div className="text-center text-sm text-muted-foreground mb-3">
-                                左のリストからチャットを選ぶか、新しく入力して開始してください
-                            </div>
-                            <ChatInput onSend={handleSend} />
-                        </div>
-                    </div>
-                )}
-            </main>
-
-            <ChatDeleteDialog
-                open={deleteDialog.open}
-                onOpenChange={(open) => setDeleteDialog(prev => ({ ...prev, open }))}
-                chatTitle={deleteDialog.chatTitle}
-                onConfirm={handleDeleteConfirm}
-                isDeleting={deletingChatId !== null}
-            />
-        </div>
-    );
+      <ChatDeleteDialog
+        open={deleteDialog.open}
+        onOpenChange={(open) => setDeleteDialog((prev) => ({ ...prev, open }))}
+        chatTitle={deleteDialog.chatTitle}
+        onConfirm={handleDeleteConfirm}
+        isDeleting={deletingChatId !== null}
+      />
+    </div>
+  );
 };

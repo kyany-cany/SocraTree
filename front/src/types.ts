@@ -31,7 +31,7 @@ export type Chat = {
 
 export type Message = {
   id: string;
-  role: "user" | "assistant";
+  role: 'user' | 'assistant';
   content: string;
   created_at: string;
   updated_at: string;
@@ -45,7 +45,7 @@ export type Metrics = {
 
 export type MessageResponse = {
   chat: Chat;
-  user_msg: Pick<Message, "id" | "created_at" | "updated_at">;
+  user_msg: Pick<Message, 'id' | 'created_at' | 'updated_at'>;
   assistant_msg: Message;
   metrics: Metrics;
 };
