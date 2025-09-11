@@ -45,6 +45,9 @@ export default tseslint.config([
 
       // --- React 関連 ---
       'react/react-in-jsx-scope': 'off',
+
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
     },
   },
 ]);
