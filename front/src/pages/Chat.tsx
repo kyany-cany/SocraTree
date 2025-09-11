@@ -152,24 +152,6 @@ export const ChatPage = () => {
     }
   };
 
-  // useEffect(() => {
-  //     if (!currentChatId) {
-  //         setMessages([]);
-  //         return;
-  //     }
-  //     if (!isSendingRef.current && currentChatId) {
-  //         (async () => {
-  //             try {
-  //                 const list = await apiGetJson<Message[]>(`/chats/${currentChatId}/messages`);
-  //                 setMessages(list);
-  //             } finally {
-  //             }
-  //         })();
-  //     } else {
-  //         return;
-  //     }
-  // }, [currentChatId]);
-
   return (
     <div className="flex h-full overflow-hidden">
       <Sidebar
