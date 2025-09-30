@@ -72,12 +72,12 @@ export const ChatPage = () => {
         prev.map((m) =>
           m.id === tempMessageId
             ? {
-                role: 'user',
-                content: text,
-                id: res.user_msg.id,
-                created_at: res.user_msg.created_at,
-                updated_at: res.user_msg.updated_at,
-              }
+              role: 'user',
+              content: text,
+              id: res.user_msg.id,
+              created_at: res.user_msg.created_at,
+              updated_at: res.user_msg.updated_at,
+            }
             : m
         )
       );
@@ -247,16 +247,18 @@ export const ChatPage = () => {
           <>
             {/* メッセージ一覧 */}
             <ScrollArea ref={scrollAreaRef} className="flex-1 h-0 p-4">
-              {messages.map((msg, index) => (
-                <ChatMessage
-                  key={msg.id}
-                  message={msg}
-                  onReload={msg.role === 'assistant' ? () => handleReload(index) : undefined}
-                  isReloading={reloadingMessageIndex === index}
-                  onBranch={() => handleBranch(index)}
-                  isBranching={branchingMessageIndex === index}
-                />
-              ))}
+              <div className="mx-auto w-full max-w-[70%]">
+                {messages.map((msg, index) => (
+                  <ChatMessage
+                    key={msg.id}
+                    message={msg}
+                    onReload={msg.role === 'assistant' ? () => handleReload(index) : undefined}
+                    isReloading={reloadingMessageIndex === index}
+                    onBranch={() => handleBranch(index)}
+                    isBranching={branchingMessageIndex === index}
+                  />
+                ))}
+              </div>
             </ScrollArea>
             {/* 入力欄 */}
             <div className="border-t">
