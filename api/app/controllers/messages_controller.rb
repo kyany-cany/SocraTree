@@ -26,15 +26,17 @@ class MessagesController < BaseController
   def create
     # 1) ユーザー発話は DB に確定（短いTx）
     user_msg = nil
+    is_new_chat = @chat.title.blank? || @chat.title == "New chat"
+
     ActiveRecord::Base.transaction do
       user_msg = @chat.messages.create!(
         role: :user,
         content: message_param,
         metadata: metadata_param
       )
-      # ❷ タイトルが未設定なら最初の発話の先頭を使う（お好みで文字数切り取り）
-      if @chat.title.blank?
-        @chat.update_columns(title: user_msg.content.to_s.strip[0, 60], updated_at: Time.current)
+      # 新規チャットの場合は一時的なタイトルを設定
+      if is_new_chat
+        @chat.update_columns(title: "生成中...", updated_at: Time.current)
       end
     end
 
@@ -55,6 +57,12 @@ class MessagesController < BaseController
       )
       total_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start) * 1000).to_i
       assistant_msg.update_column(:metadata, assistant_msg.metadata.merge(total_ms: total_ms))
+    end
+
+    # 4) 新規チャットの場合はタイトルを生成
+    if is_new_chat
+      generated_title = GeminiService.generate_title(user_message: user_msg.content)
+      @chat.update_columns(title: generated_title, updated_at: Time.current)
     end
 
     # ❺ 初回作成時に Location を付ける（任意）

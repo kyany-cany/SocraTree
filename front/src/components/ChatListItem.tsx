@@ -42,7 +42,7 @@ export function ChatListItem({ chat, isActive, onClick, onDelete }: ChatListItem
     <div className="group relative">
       <Button
         variant={isActive ? 'secondary' : 'ghost'}
-        className={`w-full justify-start truncate pr-8 ${
+        className={`w-full justify-start pr-10 overflow-hidden ${
           isActive ? 'bg-accent text-accent-foreground' : ''
         }`}
         onClick={() => onClick(chat.id)}

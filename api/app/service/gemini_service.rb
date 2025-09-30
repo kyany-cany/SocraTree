@@ -40,4 +40,31 @@ class GeminiService
   def self.estimate_tokens(text)
     (text.to_s.length / 4.0).ceil
   end
+
+  # タイトル生成用のメソッド
+  def self.generate_title(user_message:)
+    gemini = GeminiClient.new
+
+    prompt = {
+      systemInstruction: {
+        parts: [{
+          text: "あなたはチャットのタイトルを生成するアシスタントです。ユーザーのメッセージから、簡潔で分かりやすいタイトルを生成してください。タイトルは30文字以内で、メッセージの主題を端的に表現してください。タイトルのみを出力し、余計な説明は不要です。"
+        }]
+      },
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: "次のメッセージからタイトルを生成してください:\n\n#{user_message}" }]
+        }
+      ]
+    }
+
+    title = gemini.chat(prompt.to_json).strip
+    # タイトルが長すぎる場合は切り詰める
+    title.length > 60 ? title[0, 60] : title
+  rescue => e
+    Rails.logger.error("タイトル生成エラー: #{e.message}")
+    # エラー時はユーザーメッセージの先頭を使用
+    user_message.to_s.strip[0, 60]
+  end
 end
