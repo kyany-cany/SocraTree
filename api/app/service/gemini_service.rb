@@ -1,9 +1,12 @@
 class GeminiService
-  def self.call!(chat:, latest_user_message:)
+  def self.call!(chat:, latest_user_message:, additional_context_messages: [])
     gemini = GeminiClient.new
 
     # 1) 履歴は常に時系列で取得（アーカイブされていないメッセージのみ）
     messages = chat.messages.where(archived_at: nil).order(:created_at)
+
+    # 追加のコンテキストメッセージがある場合は先頭に挿入
+    messages = additional_context_messages + messages.to_a if additional_context_messages.any?
 
     # 2) system はまとめて systemInstruction に
     system_text = messages

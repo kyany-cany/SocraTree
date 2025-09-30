@@ -168,6 +168,19 @@ class MessagesController < BaseController
     # ユーザーメッセージの内容からタイトルを生成
     generated_title = GeminiService.generate_title(user_message: user_content)
 
+    # 直前のuserメッセージを取得（コンテキスト用、保存はしない）
+    previous_user_msg = @chat.messages
+                             .where(archived_at: nil)
+                             .where(role: :user)
+                             .where("created_at < ?", message.created_at)
+                             .order(created_at: :desc)
+                             .first
+
+    # コンテキストメッセージを配列で保持（LLMに渡すが保存しない）
+    context_messages = []
+    context_messages << previous_user_msg if previous_user_msg
+    context_messages << message  # 選択されたassistantメッセージ
+
     # 新しいチャットを作成
     new_chat = nil
     user_msg = nil
@@ -179,7 +192,7 @@ class MessagesController < BaseController
         branched_from_message_id: message.id
       )
 
-      # ユーザーメッセージを作成
+      # 新しいユーザーメッセージのみを作成
       user_msg = new_chat.messages.create!(
         role: :user,
         content: user_content,
@@ -187,8 +200,12 @@ class MessagesController < BaseController
       )
     end
 
-    # LLM 呼び出し
-    llm = GeminiService.call!(chat: new_chat, latest_user_message: user_msg)
+    # LLM 呼び出し（コンテキストメッセージを追加で渡す）
+    llm = GeminiService.call!(
+      chat: new_chat,
+      latest_user_message: user_msg,
+      additional_context_messages: context_messages
+    )
 
     # アシスタント発話を保存
     start = Process.clock_gettime(Process::CLOCK_MONOTONIC)

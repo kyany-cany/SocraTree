@@ -3,8 +3,7 @@ import { GitBranch } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-
-const BRANCH_BUTTON_SELECTED_CLASS = 'bg-branch text-branch-foreground hover:!bg-branch-hover';
+import { BRANCH_BUTTON_SELECTED_CLASS } from '@/constants/styles';
 
 export const ChatInput: React.FC<{
   onSend: (text: string) => void;
@@ -43,7 +42,7 @@ export const ChatInput: React.FC<{
           variant="ghost"
           size="sm"
           onClick={onBranch}
-          className={isBranchSelected ? BRANCH_BUTTON_SELECTED_CLASS : ''}
+          {...(isBranchSelected && { className: BRANCH_BUTTON_SELECTED_CLASS })}
         >
           <GitBranch className="h-4 w-4 mr-1" />
           分岐

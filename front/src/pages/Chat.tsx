@@ -49,23 +49,47 @@ export const ChatPage = () => {
 
     // ブランチモード: 選択されたメッセージから新規チャットを作成
     if (selectedBranchMessageId && currentChatId) {
+      // 一時的な新規チャットIDを生成
+      const tempChatId = crypto.randomUUID();
+      const tempChat: Chat = { id: tempChatId, title: '生成中...', created_at: '', updated_at: '' };
+
+      // 即座に新規チャットを表示
+      setChats((prev) => [tempChat, ...prev]);
+      setCurrentChatId(tempChatId);
+
+      // 新しいuserメッセージのみを表示
+      const tempUserMessageId = crypto.randomUUID();
+      const newUserMessage: Message = {
+        role: 'user',
+        content: text,
+        id: tempUserMessageId,
+        created_at: '',
+        updated_at: '',
+      };
+
+      setMessages([newUserMessage]);
+      setSelectedBranchMessageId(null);
+
+      // バックグラウンドでAPI呼び出し
       try {
         const res = await apiPostJson<BranchResponse>(
           `/chats/${currentChatId}/messages/${selectedBranchMessageId}/branch`,
           { content: text }
         );
 
-        // 新しいチャットをリストの先頭に追加
-        setChats((prev) => [res.chat, ...prev]);
-
-        // 新しいチャットに遷移
+        // チャット情報を更新
+        setChats((prev) => prev.map((c) => (c.id === tempChatId ? res.chat : c)));
         setCurrentChatId(res.chat.id);
-        setMessages(res.messages);
 
-        // ブランチ選択を解除
-        setSelectedBranchMessageId(null);
+        // APIレスポンスのメッセージのみを表示
+        setMessages(res.messages);
       } catch (e) {
         console.error(e);
+        // エラー時は元のチャットに戻す
+        setChats((prev) => prev.filter((c) => c.id !== tempChatId));
+        if (currentChatId) {
+          setCurrentChatId(currentChatId);
+        }
         alert('チャットの分岐に失敗しました');
       } finally {
         isSendingRef.current = false;

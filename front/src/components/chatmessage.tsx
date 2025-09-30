@@ -2,13 +2,12 @@ import React from 'react';
 import MarkdownMessage from '@/components/markdown';
 import { Button } from '@/components/ui/button';
 import { RotateCw, Loader2, GitBranch } from 'lucide-react';
+import { BRANCH_BUTTON_SELECTED_CLASS } from '@/constants/styles';
 
 type Message = {
   role: 'user' | 'assistant';
   content: string;
 };
-
-const BRANCH_BUTTON_SELECTED_CLASS = 'bg-branch text-branch-foreground hover:!bg-branch-hover';
 
 export const ChatMessage: React.FC<{
   message: Message;
@@ -47,7 +46,7 @@ export const ChatMessage: React.FC<{
               variant="ghost"
               size="sm"
               onClick={onBranch}
-              className={`h-8 px-3 ${isBranchSelected ? BRANCH_BUTTON_SELECTED_CLASS : ''}`}
+              className={isBranchSelected ? `h-8 px-3 ${BRANCH_BUTTON_SELECTED_CLASS}` : 'h-8 px-3'}
             >
               <GitBranch className="h-4 w-4 mr-1" />
             </Button>
