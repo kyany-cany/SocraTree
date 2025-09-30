@@ -4,7 +4,7 @@ import { ChatDeleteDialog } from '@/components/ChatDeleteDialog';
 import { ChatInput } from '@/components/chatinput';
 import { ChatMessage } from '@/components/chatmessage';
 import { Sidebar } from '@/components/sidebar';
-import { apiPostJson, archiveChat, deleteChat } from '@/lib/api';
+import { apiPostJson, deleteChat } from '@/lib/api';
 import type { Chat, Message, MessageResponse } from '@/types';
 
 export const ChatPage = () => {
@@ -113,7 +113,7 @@ export const ChatPage = () => {
     });
   };
 
-  const handleDeleteConfirm = async (type: 'archive' | 'hard') => {
+  const handleDeleteConfirm = async () => {
     if (!deleteDialog.chatId) return;
 
     setDeletingChatId(deleteDialog.chatId);
@@ -130,13 +130,8 @@ export const ChatPage = () => {
     }
 
     try {
-      if (type === 'archive') {
-        await archiveChat(chatToDelete);
-        console.log('Chat archived successfully');
-      } else {
-        await deleteChat(chatToDelete);
-        console.log('Chat deleted successfully');
-      }
+      await deleteChat(chatToDelete);
+      console.log('Chat deleted successfully');
     } catch (error) {
       console.error('Failed to delete chat:', error);
       // エラー時はロールバック
