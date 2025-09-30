@@ -27,6 +27,7 @@ export type Chat = {
   title: string;
   created_at: string;
   updated_at: string;
+  branched_from_message_id?: string;
 };
 
 export type Message = {
@@ -48,4 +49,9 @@ export type MessageResponse = {
   user_msg: Pick<Message, 'id' | 'created_at' | 'updated_at'>;
   assistant_msg: Message;
   metrics: Metrics;
+};
+
+export type BranchResponse = {
+  chat: Chat;
+  messages: Message[];
 };

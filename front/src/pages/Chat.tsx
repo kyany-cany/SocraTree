@@ -6,7 +6,7 @@ import { ChatMessage } from '@/components/chatmessage';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sidebar } from '@/components/sidebar';
 import { apiPostJson, deleteChat } from '@/lib/api';
-import type { Chat, Message, MessageResponse } from '@/types';
+import type { Chat, Message, MessageResponse, BranchResponse } from '@/types';
 
 export const ChatPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -16,6 +16,7 @@ export const ChatPage = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [reloadingMessageIndex, setReloadingMessageIndex] = useState<number | null>(null);
+  const [branchingMessageIndex, setBranchingMessageIndex] = useState<number | null>(null);
 
   // 削除ダイアログの状態
   const [deleteDialog, setDeleteDialog] = useState<{
@@ -199,6 +200,35 @@ export const ChatPage = () => {
     }
   };
 
+  const handleBranch = async (messageIndex: number) => {
+    if (isSendingRef.current || !currentChatId) return;
+
+    const message = messages[messageIndex];
+
+    isSendingRef.current = true;
+    setBranchingMessageIndex(messageIndex);
+
+    try {
+      const res = await apiPostJson<BranchResponse>(
+        `/chats/${currentChatId}/messages/${message.id}/branch`,
+        {}
+      );
+
+      // 新しいチャットをリストの先頭に追加
+      setChats((prev) => [res.chat, ...prev]);
+
+      // 新しいチャットに遷移
+      setCurrentChatId(res.chat.id);
+      setMessages(res.messages);
+    } catch (e) {
+      console.error(e);
+      alert('チャットの分岐に失敗しました');
+    } finally {
+      isSendingRef.current = false;
+      setBranchingMessageIndex(null);
+    }
+  };
+
   return (
     <div className="flex h-full overflow-hidden">
       <Sidebar
@@ -223,6 +253,8 @@ export const ChatPage = () => {
                   message={msg}
                   onReload={msg.role === 'assistant' ? () => handleReload(index) : undefined}
                   isReloading={reloadingMessageIndex === index}
+                  onBranch={() => handleBranch(index)}
+                  isBranching={branchingMessageIndex === index}
                 />
               ))}
             </ScrollArea>

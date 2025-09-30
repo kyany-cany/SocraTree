@@ -1,7 +1,7 @@
 import React from 'react';
 import MarkdownMessage from '@/components/markdown';
 import { Button } from '@/components/ui/button';
-import { RotateCw, Loader2 } from 'lucide-react';
+import { RotateCw, Loader2, GitBranch } from 'lucide-react';
 
 type Message = {
   role: 'user' | 'assistant';
@@ -12,7 +12,9 @@ export const ChatMessage: React.FC<{
   message: Message;
   onReload?: () => void;
   isReloading?: boolean;
-}> = ({ message, onReload, isReloading = false }) => {
+  onBranch?: () => void;
+  isBranching?: boolean;
+}> = ({ message, onReload, isReloading = false, onBranch, isBranching = false }) => {
   const isUser = message.role === 'user';
 
   return (
@@ -27,15 +29,39 @@ export const ChatMessage: React.FC<{
           {isUser ? message.content : <MarkdownMessage text={message.content} />}
         </div>
       )}
-      {!isUser && onReload && !isReloading && (
-        <div className="max-w-[70%] mx-auto mt-2">
+      {!isUser && (onReload || onBranch) && !isReloading && !isBranching && (
+        <div className="max-w-[70%] mx-auto mt-2 flex gap-2">
+          {onReload && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onReload}
+              className="h-8 px-3"
+            >
+              <RotateCw className="h-4 w-4 mr-1" />
+            </Button>
+          )}
+          {onBranch && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onBranch}
+              className="h-8 px-3"
+            >
+              <GitBranch className="h-4 w-4 mr-1" />
+            </Button>
+          )}
+        </div>
+      )}
+      {isUser && onBranch && !isBranching && (
+        <div className="max-w-[70%] ml-auto mt-2 flex justify-end">
           <Button
             variant="ghost"
             size="sm"
-            onClick={onReload}
+            onClick={onBranch}
             className="h-8 px-3"
           >
-            <RotateCw className="h-4 w-4 mr-1" />
+            <GitBranch className="h-4 w-4 mr-1" />
           </Button>
         </div>
       )}

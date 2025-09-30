@@ -2,6 +2,7 @@ class MessagesController < BaseController
   before_action :set_chat_for_index,  only: :index
   before_action :set_chat_for_create, only: :create
   before_action :set_chat_for_reload, only: :reload
+  before_action :set_chat_for_branch, only: :branch
 
   # GET /chats/:chat_id/messages?limit=50&before=...
   def index
@@ -147,6 +148,53 @@ class MessagesController < BaseController
     render json: { error: "LLM error", detail: e.message }, status: :bad_gateway
   end
 
+  # POST /chats/:chat_id/messages/:id/branch
+  def branch
+    message = @chat.messages.find(params[:id])
+
+    # そのメッセージまでの履歴（archived されていないもの）を取得
+    messages_to_copy = @chat.messages
+                            .where(archived_at: nil)
+                            .where("created_at <= ?", message.created_at)
+                            .order(created_at: :asc)
+
+    # 新しいチャットを作成
+    new_chat = nil
+    copied_messages = []
+
+    ActiveRecord::Base.transaction do
+      new_chat = current_user.chats.create!(
+        title: "#{@chat.title} (分岐)",
+        branched_from_message_id: message.id
+      )
+
+      # メッセージをコピー
+      messages_to_copy.each do |msg|
+        copied_messages << new_chat.messages.create!(
+          role: msg.role,
+          content: msg.content,
+          metadata: msg.metadata,
+          token_in: msg.token_in,
+          token_out: msg.token_out,
+          latency_ms: msg.latency_ms,
+          error_text: msg.error_text,
+          created_at: msg.created_at
+        )
+      end
+    end
+
+    render json: {
+      chat: { id: new_chat.id, title: new_chat.title, created_at: new_chat.created_at, updated_at: new_chat.updated_at },
+      messages: copied_messages.as_json(
+        only: [:id, :role, :content, :metadata, :token_in, :token_out, :latency_ms, :error_text, :created_at, :updated_at]
+      )
+    }, status: :created
+
+  rescue => e
+    Rails.logger.error(e.full_message)
+    render json: { error: "Branch creation failed", detail: e.message }, status: :internal_server_error
+  end
+
   private
 
   def set_chat_for_index
@@ -160,6 +208,10 @@ class MessagesController < BaseController
   end
 
   def set_chat_for_reload
+    @chat = current_user.chats.find(params.require(:chat_id))
+  end
+
+  def set_chat_for_branch
     @chat = current_user.chats.find(params.require(:chat_id))
   end
 

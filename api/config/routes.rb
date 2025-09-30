@@ -31,6 +31,7 @@ Rails.application.routes.draw do
     patch :restore, on: :member
     resources :messages, only: [:index, :create] do
       post :reload, on: :member
+      post :branch, on: :member
     end
   end
 
