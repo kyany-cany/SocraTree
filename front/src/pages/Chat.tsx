@@ -1,8 +1,9 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { ChatDeleteDialog } from '@/components/ChatDeleteDialog';
 import { ChatInput } from '@/components/chatinput';
 import { ChatMessage } from '@/components/chatmessage';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sidebar } from '@/components/sidebar';
 import { apiPostJson, deleteChat } from '@/lib/api';
 import type { Chat, Message, MessageResponse } from '@/types';
@@ -13,6 +14,7 @@ export const ChatPage = () => {
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const isSendingRef = useRef<boolean>(false);
   const [messages, setMessages] = useState<Message[]>([]);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   // 削除ダイアログの状態
   const [deleteDialog, setDeleteDialog] = useState<{
@@ -25,6 +27,16 @@ export const ChatPage = () => {
     chatTitle: '',
   });
   const [deletingChatId, setDeletingChatId] = useState<string | null>(null);
+
+  // 自動スクロール: messagesが更新されたら最下部へ
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+      const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (viewport) {
+        viewport.scrollTop = viewport.scrollHeight;
+      }
+    }
+  }, [messages]);
 
   const handleSend = async (text: string) => {
     if (isSendingRef.current) return;
@@ -164,11 +176,11 @@ export const ChatPage = () => {
         {currentChatId ? (
           <>
             {/* メッセージ一覧 */}
-            <div className="flex-1 overflow-y-auto p-4">
+            <ScrollArea ref={scrollAreaRef} className="flex-1 h-0 p-4">
               {messages.map((msg) => (
                 <ChatMessage key={msg.id} message={msg} />
               ))}
-            </div>
+            </ScrollArea>
             {/* 入力欄 */}
             <div className="border-t">
               <ChatInput onSend={handleSend} />
