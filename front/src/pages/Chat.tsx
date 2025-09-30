@@ -77,8 +77,19 @@ export const ChatPage = () => {
           { content: text }
         );
 
-        // チャット情報を更新
-        setChats((prev) => prev.map((c) => (c.id === tempChatId ? res.chat : c)));
+        // チャット情報を更新（新チャットと親チャットのchildren）
+        setChats((prev) =>
+          prev.map((c) => {
+            if (c.id === tempChatId) {
+              return res.chat;
+            }
+            // 親チャットのchildrenを更新
+            if (c.id === res.chat.parent_chat_id) {
+              return { ...c, children: [...(c.children || []), res.chat.id] };
+            }
+            return c;
+          })
+        );
         setCurrentChatId(res.chat.id);
 
         // APIレスポンスのメッセージのみを表示

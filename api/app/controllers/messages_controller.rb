@@ -223,7 +223,14 @@ class MessagesController < BaseController
     end
 
     render json: {
-      chat: { id: new_chat.id, title: new_chat.title, created_at: new_chat.created_at, updated_at: new_chat.updated_at },
+      chat: {
+        id: new_chat.id,
+        title: new_chat.title,
+        created_at: new_chat.created_at,
+        updated_at: new_chat.updated_at,
+        parent_chat_id: new_chat.parent_chat&.id,
+        children: new_chat.child_chats.pluck(:id)
+      },
       messages: [
         user_msg.as_json(only: [:id, :role, :content, :metadata, :created_at, :updated_at]),
         assistant_msg.as_json(only: [:id, :role, :content, :metadata, :token_in, :token_out, :latency_ms, :created_at, :updated_at])

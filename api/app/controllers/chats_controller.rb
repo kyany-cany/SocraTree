@@ -1,7 +1,27 @@
 class ChatsController < BaseController
   def index
-    render json: current_user.chats.where(archived: false).order(updated_at: :desc)
-                   .limit(50).select(:id,:title,:updated_at)
+    chats = current_user.chats
+                        .where(archived: false)
+                        .order(updated_at: :desc)
+                        .limit(50)
+                        .includes(:branched_from_message)
+
+    # 各チャットに親子関係情報を追加
+    chats_with_relations = chats.map do |chat|
+      parent_chat_id = chat.parent_chat&.id
+      child_chat_ids = chat.child_chats.pluck(:id)
+
+      {
+        id: chat.id,
+        title: chat.title,
+        updated_at: chat.updated_at,
+        created_at: chat.created_at,
+        parent_chat_id: parent_chat_id,
+        children: child_chat_ids
+      }
+    end
+
+    render json: chats_with_relations
   end
 
   def destroy

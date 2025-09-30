@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, MessageSquare, Settings } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -34,6 +34,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onChatDelete,
 }) => {
   const { signOut } = useAuth();
+  const [expandedChats, setExpandedChats] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     (async () => {
@@ -47,6 +48,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
       }
     })();
   }, [setChats]);
+
+  // currentChatIdが変更された時、その親を展開する
+  useEffect(() => {
+    if (currentChatId) {
+      const currentChat = chats.find((c) => c.id === currentChatId);
+      if (currentChat?.parent_chat_id) {
+        setExpandedChats((prev) => {
+          const next = new Set(prev);
+          next.add(currentChat.parent_chat_id!);
+          return next;
+        });
+      }
+    }
+  }, [currentChatId, chats]);
 
   function onNewChat() {
     setCurrentChatId(null);
@@ -64,6 +79,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
       }
     })();
   }
+
+  function toggleExpanded(chatId: string) {
+    setExpandedChats((prev) => {
+      const next = new Set(prev);
+      if (next.has(chatId)) {
+        next.delete(chatId);
+      } else {
+        next.add(chatId);
+      }
+      return next;
+    });
+  }
+
+  // 親チャットのみを抽出
+  const parentChats = chats.filter((chat) => !chat.parent_chat_id);
 
   return (
     <Collapsible open={open} onOpenChange={onToggle} asChild>
@@ -106,15 +136,40 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <Separator />
             <ScrollArea className="h-[calc(100vh-6rem)] px-2 mt-2">
               <div className="px-2 pb-4 space-y-1">
-                {chats.map((c) => (
-                  <ChatListItem
-                    key={c.id}
-                    chat={c}
-                    isActive={currentChatId === c.id}
-                    onClick={onChatClick}
-                    onDelete={onChatDelete}
-                  />
-                ))}
+                {parentChats.map((parentChat) => {
+                  const childChats = parentChat.children
+                    ?.map((childId) => chats.find((c) => c.id === childId))
+                    .filter((c): c is Chat => c !== undefined) || [];
+                  const hasChildren = childChats.length > 0;
+                  const isExpanded = expandedChats.has(parentChat.id);
+
+                  return (
+                    <div key={parentChat.id}>
+                      {/* 親チャット */}
+                      <ChatListItem
+                        chat={parentChat}
+                        isActive={currentChatId === parentChat.id}
+                        onClick={onChatClick}
+                        onDelete={onChatDelete}
+                        hasChildren={hasChildren}
+                        isExpanded={isExpanded}
+                        onToggle={() => toggleExpanded(parentChat.id)}
+                        depth={0}
+                      />
+                      {/* 子チャット */}
+                      {isExpanded && childChats.map((childChat) => (
+                        <ChatListItem
+                          key={childChat.id}
+                          chat={childChat}
+                          isActive={currentChatId === childChat.id}
+                          onClick={onChatClick}
+                          onDelete={onChatDelete}
+                          depth={1}
+                        />
+                      ))}
+                    </div>
+                  );
+                })}
                 {chats.length === 0 && (
                   <div className="text-xs text-muted-foreground px-2 py-3">
                     チャットはまだありません

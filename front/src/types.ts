@@ -28,6 +28,8 @@ export type Chat = {
   created_at: string;
   updated_at: string;
   branched_from_message_id?: string;
+  parent_chat_id?: string;
+  children?: string[];
 };
 
 export type Message = {
