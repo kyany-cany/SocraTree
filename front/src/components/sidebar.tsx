@@ -88,21 +88,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
             className="mt-14 transition-opacity duration-300 data-[state=closed]:opacity-0 data-[state=open]:opacity-100"
             data-state={open ? 'open' : 'closed'}
           >
-            <div className="px-4">
+            {/* <div className="px-4">
               <h2 className="text-xl font-bold mb-4">メニュー</h2>
-            </div>
-            <Separator />
-            <ScrollArea className="h-[calc(100vh-6rem)] px-2">
+            </div> */}
+            <div className="px-2 mb-2">
               <Button
                 variant="ghost"
                 className="w-full justify-start gap-2 mb-1"
                 onClick={() => onNewChat()}
               >
-                <MessageSquare className="h-4 w-4" /> チャット
+                <MessageSquare className="h-4 w-4" /> New Chat
               </Button>
               <Button variant="ghost" className="w-full justify-start gap-2" onClick={signOut}>
-                <Settings className="h-4 w-4" /> ログアウト
+                <Settings className="h-4 w-4" /> Log out
               </Button>
+            </div>
+            <Separator />
+            <ScrollArea className="h-[calc(100vh-6rem)] px-2 mt-2">
               <div className="px-2 pb-4 space-y-1">
                 {chats.map((c) => (
                   <ChatListItem
