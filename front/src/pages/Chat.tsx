@@ -15,6 +15,7 @@ export const ChatPage = () => {
   const isSendingRef = useRef<boolean>(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [reloadingMessageIndex, setReloadingMessageIndex] = useState<number | null>(null);
 
   // 削除ダイアログの状態
   const [deleteDialog, setDeleteDialog] = useState<{
@@ -159,6 +160,47 @@ export const ChatPage = () => {
     }
   };
 
+  const handleReload = async (messageIndex: number) => {
+    if (isSendingRef.current || !currentChatId) return;
+
+    // メッセージペアを探す（userメッセージとassistantメッセージ）
+    if (messageIndex < 1) return;
+
+    const userMessage = messages[messageIndex - 1];
+    if (userMessage.role !== 'user') return;
+
+    isSendingRef.current = true;
+    setReloadingMessageIndex(messageIndex);
+
+    try {
+      const res = await apiPostJson<MessageResponse>(`/chats/${currentChatId}/messages`, {
+        content: userMessage.content
+      });
+
+      // 新しいassistantメッセージで置き換え
+      const newAssistantMessage: Message = {
+        role: 'assistant',
+        content: res.assistant_msg.content,
+        id: res.assistant_msg.id,
+        created_at: res.assistant_msg.created_at,
+        updated_at: res.assistant_msg.updated_at,
+      };
+
+      setMessages((prev) => [...prev.slice(0, messageIndex), newAssistantMessage, ...prev.slice(messageIndex + 1)]);
+
+      // チャット情報を更新
+      setChats((prev) =>
+        prev.map((c) => (c.id === currentChatId ? { ...c, updated_at: res.chat.updated_at } : c))
+      );
+    } catch (e) {
+      console.error(e);
+      alert('メッセージの再読み込みに失敗しました');
+    } finally {
+      isSendingRef.current = false;
+      setReloadingMessageIndex(null);
+    }
+  };
+
   return (
     <div className="flex h-full overflow-hidden">
       <Sidebar
@@ -177,8 +219,13 @@ export const ChatPage = () => {
           <>
             {/* メッセージ一覧 */}
             <ScrollArea ref={scrollAreaRef} className="flex-1 h-0 p-4">
-              {messages.map((msg) => (
-                <ChatMessage key={msg.id} message={msg} />
+              {messages.map((msg, index) => (
+                <ChatMessage
+                  key={msg.id}
+                  message={msg}
+                  onReload={msg.role === 'assistant' ? () => handleReload(index) : undefined}
+                  isReloading={reloadingMessageIndex === index}
+                />
               ))}
             </ScrollArea>
             {/* 入力欄 */}
