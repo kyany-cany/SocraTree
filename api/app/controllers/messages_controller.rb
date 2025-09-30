@@ -1,10 +1,11 @@
 class MessagesController < BaseController
   before_action :set_chat_for_index,  only: :index
   before_action :set_chat_for_create, only: :create
+  before_action :set_chat_for_reload, only: :reload
 
   # GET /chats/:chat_id/messages?limit=50&before=...
   def index
-    scope = @chat.messages.order(:created_at)
+    scope = @chat.messages.where(archived_at: nil).order(:created_at)
 
     if params[:before].present?
       begin
@@ -79,6 +80,73 @@ class MessagesController < BaseController
     render json: { error: "LLM error", detail: e.message }, status: :bad_gateway
   end
 
+  # POST /chats/:chat_id/messages/:id/reload
+  def reload
+    message = @chat.messages.find(params[:id])
+
+    unless message.role == "assistant"
+      return render json: { error: "Only assistant messages can be reloaded" }, status: :bad_request
+    end
+
+    # 直前のユーザーメッセージを探す
+    user_msg = @chat.messages
+                    .where(archived_at: nil)
+                    .where(role: :user)
+                    .where("created_at < ?", message.created_at)
+                    .order(created_at: :desc)
+                    .first
+
+    unless user_msg
+      return render json: { error: "No user message found before this assistant message" }, status: :bad_request
+    end
+
+    # 元のアシスタントメッセージをアーカイブ
+    message.update!(archived_at: Time.current)
+
+    # LLM 呼び出し
+    llm = GeminiService.call!(chat: @chat, latest_user_message: user_msg)
+
+    # 新しいアシスタント発話を保存
+    start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    new_assistant_msg = nil
+    ActiveRecord::Base.transaction do
+      new_assistant_msg = @chat.messages.create!(
+        role: :assistant,
+        content:   llm[:content],
+        token_in:  llm[:token_in],
+        token_out: llm[:token_out],
+        latency_ms: llm[:latency_ms],
+        metadata: { model: llm[:model] }
+      )
+      total_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start) * 1000).to_i
+      new_assistant_msg.update_column(:metadata, new_assistant_msg.metadata.merge(total_ms: total_ms))
+    end
+
+    render json: {
+      chat: { id: @chat.id, title: @chat.title, updated_at: @chat.updated_at },
+      assistant_msg: {
+        id: new_assistant_msg.id,
+        role: new_assistant_msg.role,
+        content: new_assistant_msg.content,
+        created_at: new_assistant_msg.created_at
+      },
+      metrics: { token_in: new_assistant_msg.token_in, token_out: new_assistant_msg.token_out, latency_ms: new_assistant_msg.latency_ms }
+    }, status: :created
+
+  rescue => e
+    Rails.logger.error(e.full_message)
+    begin
+      @chat&.messages&.create!(
+        role: :system,
+        content: "エラーが発生しました",
+        error_text: e.message,
+        metadata: { kind: "llm_error" }
+      )
+    rescue StandardError
+    end
+    render json: { error: "LLM error", detail: e.message }, status: :bad_gateway
+  end
+
   private
 
   def set_chat_for_index
@@ -89,6 +157,10 @@ class MessagesController < BaseController
     @chat = params[:chat_id].present? ?
               current_user.chats.find(params[:chat_id]) :
               current_user.chats.create!(title: params[:title].presence || "New chat")
+  end
+
+  def set_chat_for_reload
+    @chat = current_user.chats.find(params.require(:chat_id))
   end
 
   def message_param

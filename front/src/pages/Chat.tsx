@@ -163,19 +163,17 @@ export const ChatPage = () => {
   const handleReload = async (messageIndex: number) => {
     if (isSendingRef.current || !currentChatId) return;
 
-    // メッセージペアを探す（userメッセージとassistantメッセージ）
-    if (messageIndex < 1) return;
-
-    const userMessage = messages[messageIndex - 1];
-    if (userMessage.role !== 'user') return;
+    const message = messages[messageIndex];
+    if (message.role !== 'assistant') return;
 
     isSendingRef.current = true;
     setReloadingMessageIndex(messageIndex);
 
     try {
-      const res = await apiPostJson<MessageResponse>(`/chats/${currentChatId}/messages`, {
-        content: userMessage.content
-      });
+      const res = await apiPostJson<{ chat: Chat; assistant_msg: Message; metrics: any }>(
+        `/chats/${currentChatId}/messages/${message.id}/reload`,
+        {}
+      );
 
       // 新しいassistantメッセージで置き換え
       const newAssistantMessage: Message = {

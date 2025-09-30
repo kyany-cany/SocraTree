@@ -29,7 +29,9 @@ Rails.application.routes.draw do
   resources :chats, only: [:index, :destroy] do
     patch :archive, on: :member
     patch :restore, on: :member
-    resources :messages, only: [:index, :create]
+    resources :messages, only: [:index, :create] do
+      post :reload, on: :member
+    end
   end
 
 
