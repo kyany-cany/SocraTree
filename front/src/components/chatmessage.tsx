@@ -8,13 +8,16 @@ type Message = {
   content: string;
 };
 
+const BRANCH_BUTTON_SELECTED_CLASS = 'bg-branch text-branch-foreground hover:!bg-branch-hover';
+
 export const ChatMessage: React.FC<{
   message: Message;
   onReload?: () => void;
   isReloading?: boolean;
   onBranch?: () => void;
   isBranching?: boolean;
-}> = ({ message, onReload, isReloading = false, onBranch, isBranching = false }) => {
+  isBranchSelected?: boolean;
+}> = ({ message, onReload, isReloading = false, onBranch, isBranching = false, isBranchSelected = false }) => {
   const isUser = message.role === 'user';
 
   return (
@@ -40,7 +43,12 @@ export const ChatMessage: React.FC<{
             </Button>
           )}
           {onBranch && (
-            <Button variant="ghost" size="sm" onClick={onBranch} className="h-8 px-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onBranch}
+              className={`h-8 px-3 ${isBranchSelected ? BRANCH_BUTTON_SELECTED_CLASS : ''}`}
+            >
               <GitBranch className="h-4 w-4 mr-1" />
             </Button>
           )}

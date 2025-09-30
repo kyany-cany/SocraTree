@@ -45,6 +45,9 @@ body,
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-branch: var(--branch);
+  --color-branch-foreground: var(--branch-foreground);
+  --color-branch-hover: var(--branch-hover);
 }
 @layer base {
   :root {
@@ -80,6 +83,9 @@ body,
     --sidebar-accent-foreground: oklch(0.205 0 0);
     --sidebar-border: oklch(0.922 0 0);
     --sidebar-ring: oklch(0.708 0 0);
+    --branch: oklch(0.55 0.22 250); /* 青色 */
+    --branch-foreground: oklch(1 0 0);
+    --branch-hover: oklch(0.65 0.22 250); /* 青色 (ホバー時、少し明るい) */
   }
 
   .dark {
@@ -114,6 +120,9 @@ body,
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.556 0 0);
+    --branch: oklch(0.6 0.25 260); /* 青色 (ダーク用) */
+    --branch-foreground: oklch(0.985 0 0);
+    --branch-hover: oklch(0.7 0.25 260); /* 青色 (ホバー時、少し明るい) */
   }
 
   /* ==== Green Theme ==== */
@@ -167,6 +176,9 @@ body,
     --sidebar-accent-foreground: oklch(0.2 0 0);
     --sidebar-border: oklch(0.85 0 0);
     --sidebar-ring: oklch(0.6 0.05 145);
+    --branch: oklch(0.55 0.22 250); /* 青色 (グリーンテーマ用) */
+    --branch-foreground: oklch(1 0 0);
+    --branch-hover: oklch(0.65 0.22 250); /* 青色 (ホバー時、少し明るい) */
   }
 
   * {

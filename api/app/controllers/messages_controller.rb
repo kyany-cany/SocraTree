@@ -159,47 +159,71 @@ class MessagesController < BaseController
   # POST /chats/:chat_id/messages/:id/branch
   def branch
     message = @chat.messages.find(params[:id])
+    user_content = params.require(:content)
 
-    # そのメッセージまでの履歴（archived されていないもの）を取得
-    messages_to_copy = @chat.messages
-                            .where(archived_at: nil)
-                            .where("created_at <= ?", message.created_at)
-                            .order(created_at: :asc)
+    unless message.role == "assistant"
+      return render json: { error: "Only assistant messages can be branched" }, status: :bad_request
+    end
+
+    # ユーザーメッセージの内容からタイトルを生成
+    generated_title = GeminiService.generate_title(user_message: user_content)
 
     # 新しいチャットを作成
     new_chat = nil
-    copied_messages = []
+    user_msg = nil
+    assistant_msg = nil
 
     ActiveRecord::Base.transaction do
       new_chat = current_user.chats.create!(
-        title: "#{@chat.title} (分岐)",
+        title: generated_title,
         branched_from_message_id: message.id
       )
 
-      # メッセージをコピー
-      messages_to_copy.each do |msg|
-        copied_messages << new_chat.messages.create!(
-          role: msg.role,
-          content: msg.content,
-          metadata: msg.metadata,
-          token_in: msg.token_in,
-          token_out: msg.token_out,
-          latency_ms: msg.latency_ms,
-          error_text: msg.error_text,
-          created_at: msg.created_at
-        )
-      end
+      # ユーザーメッセージを作成
+      user_msg = new_chat.messages.create!(
+        role: :user,
+        content: user_content,
+        metadata: {}
+      )
+    end
+
+    # LLM 呼び出し
+    llm = GeminiService.call!(chat: new_chat, latest_user_message: user_msg)
+
+    # アシスタント発話を保存
+    start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    ActiveRecord::Base.transaction do
+      assistant_msg = new_chat.messages.create!(
+        role: :assistant,
+        content:   llm[:content],
+        token_in:  llm[:token_in],
+        token_out: llm[:token_out],
+        latency_ms: llm[:latency_ms],
+        metadata: { model: llm[:model] }
+      )
+      total_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start) * 1000).to_i
+      assistant_msg.update_column(:metadata, assistant_msg.metadata.merge(total_ms: total_ms))
     end
 
     render json: {
       chat: { id: new_chat.id, title: new_chat.title, created_at: new_chat.created_at, updated_at: new_chat.updated_at },
-      messages: copied_messages.as_json(
-        only: [:id, :role, :content, :metadata, :token_in, :token_out, :latency_ms, :error_text, :created_at, :updated_at]
-      )
+      messages: [
+        user_msg.as_json(only: [:id, :role, :content, :metadata, :created_at, :updated_at]),
+        assistant_msg.as_json(only: [:id, :role, :content, :metadata, :token_in, :token_out, :latency_ms, :created_at, :updated_at])
+      ]
     }, status: :created
 
   rescue => e
     Rails.logger.error(e.full_message)
+    begin
+      new_chat&.messages&.create!(
+        role: :system,
+        content: "エラーが発生しました",
+        error_text: e.message,
+        metadata: { kind: "llm_error" }
+      )
+    rescue StandardError
+    end
     render json: { error: "Branch creation failed", detail: e.message }, status: :internal_server_error
   end
 

@@ -30,6 +30,9 @@ export const ChatPage = () => {
   });
   const [deletingChatId, setDeletingChatId] = useState<string | null>(null);
 
+  // ブランチ選択状態
+  const [selectedBranchMessageId, setSelectedBranchMessageId] = useState<string | null>(null);
+
   // 自動スクロール: messagesが更新されたら最下部へ
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -43,6 +46,34 @@ export const ChatPage = () => {
   const handleSend = async (text: string) => {
     if (isSendingRef.current) return;
     isSendingRef.current = true;
+
+    // ブランチモード: 選択されたメッセージから新規チャットを作成
+    if (selectedBranchMessageId && currentChatId) {
+      try {
+        const res = await apiPostJson<BranchResponse>(
+          `/chats/${currentChatId}/messages/${selectedBranchMessageId}/branch`,
+          { content: text }
+        );
+
+        // 新しいチャットをリストの先頭に追加
+        setChats((prev) => [res.chat, ...prev]);
+
+        // 新しいチャットに遷移
+        setCurrentChatId(res.chat.id);
+        setMessages(res.messages);
+
+        // ブランチ選択を解除
+        setSelectedBranchMessageId(null);
+      } catch (e) {
+        console.error(e);
+        alert('チャットの分岐に失敗しました');
+      } finally {
+        isSendingRef.current = false;
+      }
+      return;
+    }
+
+    // 通常モード: 既存のメッセージ送信ロジック
     const existingChatId = currentChatId;
 
     // 新規なら一時IDを作成
@@ -200,34 +231,38 @@ export const ChatPage = () => {
     }
   };
 
-  const handleBranch = async (messageIndex: number) => {
+  const handleBranch = (messageIndex: number) => {
     if (isSendingRef.current || !currentChatId) return;
 
     const message = messages[messageIndex];
 
-    isSendingRef.current = true;
-    setBranchingMessageIndex(messageIndex);
+    // トグル: 同じメッセージを選択した場合は解除
+    if (selectedBranchMessageId === message.id) {
+      setSelectedBranchMessageId(null);
+      return;
+    }
 
-    try {
-      const res = await apiPostJson<BranchResponse>(
-        `/chats/${currentChatId}/messages/${message.id}/branch`,
-        {}
-      );
+    setSelectedBranchMessageId(message.id);
+  };
 
-      // 新しいチャットをリストの先頭に追加
-      setChats((prev) => [res.chat, ...prev]);
+  const handleBranchToggle = () => {
+    // ChatInputのブランチボタンが押された場合
+    if (selectedBranchMessageId) {
+      // 既に選択されている場合は解除
+      setSelectedBranchMessageId(null);
+    } else {
+      // 選択がない場合は、直前のassistantメッセージを選択
+      const lastAssistantMessage = messages
+        .slice()
+        .reverse()
+        .find((msg) => msg.role === 'assistant');
 
-      // 新しいチャットに遷移
-      setCurrentChatId(res.chat.id);
-      setMessages(res.messages);
-    } catch (e) {
-      console.error(e);
-      alert('チャットの分岐に失敗しました');
-    } finally {
-      isSendingRef.current = false;
-      setBranchingMessageIndex(null);
+      if (lastAssistantMessage) {
+        setSelectedBranchMessageId(lastAssistantMessage.id);
+      }
     }
   };
+
 
   return (
     <div className="flex h-full overflow-hidden">
@@ -256,14 +291,17 @@ export const ChatPage = () => {
                     isReloading={reloadingMessageIndex === index}
                     onBranch={() => handleBranch(index)}
                     isBranching={branchingMessageIndex === index}
+                    isBranchSelected={msg.id === selectedBranchMessageId}
                   />
                 ))}
               </div>
             </ScrollArea>
             {/* 入力欄 */}
-            <div className="border-t">
-              <ChatInput onSend={handleSend} />
-            </div>
+            <ChatInput
+              onSend={handleSend}
+              onBranch={handleBranchToggle}
+              isBranchSelected={selectedBranchMessageId !== null}
+            />
           </>
         ) : (
           // currentChat が null のとき中央に入力欄

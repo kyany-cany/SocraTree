@@ -1,9 +1,16 @@
 import { useState } from 'react';
+import { GitBranch } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
-export const ChatInput: React.FC<{ onSend: (text: string) => void }> = ({ onSend }) => {
+const BRANCH_BUTTON_SELECTED_CLASS = 'bg-branch text-branch-foreground hover:!bg-branch-hover';
+
+export const ChatInput: React.FC<{
+  onSend: (text: string) => void;
+  onBranch?: () => void;
+  isBranchSelected?: boolean;
+}> = ({ onSend, onBranch, isBranchSelected = false }) => {
   const [text, setText] = useState('');
 
   const send = () => {
@@ -13,9 +20,9 @@ export const ChatInput: React.FC<{ onSend: (text: string) => void }> = ({ onSend
   };
 
   return (
-    <div className="p-4 flex gap-2 border-t">
+    <div className="p-2 m-4 flex flex-col gap-2 bg-muted w-[70%] mx-auto rounded-2xl">
       <Textarea
-        className="resize-none"
+        className="resize-none border-none focus:ring-0 focus-visible:ring-0 shadow-none"
         placeholder="メッセージを入力"
         value={text}
         onChange={(e) => setText(e.target.value)}
@@ -31,13 +38,24 @@ export const ChatInput: React.FC<{ onSend: (text: string) => void }> = ({ onSend
           }
         }}
       />
-      <Button
-        variant="default"
-        // className="bg-blue-500 text-white px-4 py-2 rounded"
-        onClick={send}
-      >
-        送信
-      </Button>
+      <div className="flex justify-between">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onBranch}
+          className={isBranchSelected ? BRANCH_BUTTON_SELECTED_CLASS : ''}
+        >
+          <GitBranch className="h-4 w-4 mr-1" />
+          分岐
+        </Button>
+        <Button
+          className="ml-auto"
+          variant="default"
+          onClick={send}
+        >
+          送信
+        </Button>
+      </div>
     </div>
   );
 };
