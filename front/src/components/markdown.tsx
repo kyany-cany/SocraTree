@@ -34,11 +34,11 @@ const components: Components = {
             <div className="relative group my-3">
                 <button
                     onClick={handleCopy}
-                    className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition text-xs border px-2 py-1 rounded bg-black/40 hover:bg-black/60"
+                    className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition text-xs border px-2 py-1 rounded bg-secondary/80 hover:bg-secondary"
                 >
                     {copied ? 'Copied!' : 'Copy'}
                 </button>
-                <pre className="overflow-x-auto rounded-lg border border-zinc-700 bg-zinc-900 p-4">
+                <pre className="overflow-x-auto rounded-lg border border-border bg-muted p-4">
                     <code className={className} {...props}>{children}</code>
                 </pre>
             </div>
@@ -47,9 +47,9 @@ const components: Components = {
     a: ({ node, ...props }) => (
         <a {...props} target="_blank" rel="noopener noreferrer" />
     ),
-    h1: ({ node, ...props }) => <h1 {...props} style={{ margin: 0 }} />,
-    h2: ({ node, ...props }) => <h2 {...props} style={{ margin: 0 }} />,
-    h3: ({ node, ...props }) => <h3 {...props} style={{ margin: 0 }} />,
+    h1: ({ node, ...props }) => <h1 {...props} className="m-0" />,
+    h2: ({ node, ...props }) => <h2 {...props} className="m-0" />,
+    h3: ({ node, ...props }) => <h3 {...props} className="m-0" />,
 };
 
 const MarkdownMessage: React.FC<Props> = ({ text }) => {

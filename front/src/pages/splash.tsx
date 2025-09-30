@@ -1,6 +1,6 @@
 export function Splash() {
   return (
-    <div style={{ display: 'grid', placeItems: 'center', height: '100vh' }}>
+    <div className="grid place-items-center h-screen">
       <div>Loading…</div>
     </div>
   );

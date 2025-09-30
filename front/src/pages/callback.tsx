@@ -38,5 +38,5 @@ export default function OAuthCallback() {
     console.log('OAuthCallback useEffect finished');
   }, [nav, refreshMe]);
 
-  return <div style={{ padding: 24 }}>サインイン処理中…</div>;
+  return <div className="p-6">サインイン処理中…</div>;
 }
