@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Toggle } from '@/components/ui/toggle';
 import { apiGetJson } from '@/lib/api';
 import { useAuth } from '@/lib/auth-hooks';
 import type { Chat, Message } from '@/types';
@@ -72,9 +73,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       >
         {/* トグルボタン */}
         <CollapsibleTrigger asChild>
-          <Button size="icon" variant="secondary" className="absolute top-4 right-1 z-10">
+          <Toggle
+            size="icon"
+            pressed={open}
+            className="absolute top-4 right-1 z-10 bg-secondary hover:bg-secondary/80 data-[state=on]:bg-secondary data-[state=on]:text-secondary-foreground"
+            aria-label="サイドバーを開閉"
+          >
             {open ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-          </Button>
+          </Toggle>
         </CollapsibleTrigger>
 
         <CollapsibleContent className="h-full" forceMount>
