@@ -5,7 +5,7 @@ import { ChatInput } from '@/components/chatinput';
 import { ChatMessage } from '@/components/chatmessage';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sidebar } from '@/components/sidebar';
-import { apiPostJson, deleteChat } from '@/lib/api';
+import { apiPostJson, deleteChat, apiGetJson } from '@/lib/api';
 import type { Chat, Message, MessageResponse, BranchResponse } from '@/types';
 
 export const ChatPage = () => {
@@ -188,6 +188,16 @@ export const ChatPage = () => {
     }
   };
 
+  const handleNavigateToBranch = async (chatId: string) => {
+    setCurrentChatId(chatId);
+    try {
+      const list = await apiGetJson<Message[]>(`/chats/${chatId}/messages`);
+      setMessages(list);
+    } catch (error) {
+      console.error('Failed to fetch messages:', error);
+    }
+  };
+
   const handleChatDelete = (chatId: string) => {
     const chat = chats.find((c) => c.id === chatId);
     if (!chat) return;
@@ -333,6 +343,7 @@ export const ChatPage = () => {
                     onBranch={() => handleBranch(index)}
                     isBranching={branchingMessageIndex === index}
                     isBranchSelected={msg.id === selectedBranchMessageId}
+                    onNavigateToBranch={handleNavigateToBranch}
                   />
                 ))}
               </div>

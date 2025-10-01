@@ -38,6 +38,7 @@ export type Message = {
   content: string;
   created_at: string;
   updated_at: string;
+  branched_chat_ids?: string[];
 };
 
 export type Metrics = {

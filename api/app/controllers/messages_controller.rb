@@ -18,9 +18,17 @@ class MessagesController < BaseController
     end
 
     scope = scope.limit(limit_param)
-    render json: scope.as_json(
-      only: [:id, :role, :content, :metadata, :token_in, :token_out, :latency_ms, :error_text, :created_at]
-    )
+
+    # メッセージごとに子チャットIDを取得
+    messages_with_branches = scope.map do |message|
+      message.as_json(
+        only: [:id, :role, :content, :metadata, :token_in, :token_out, :latency_ms, :error_text, :created_at]
+      ).merge(
+        branched_chat_ids: message.branched_chats.pluck(:id)
+      )
+    end
+
+    render json: messages_with_branches
   end
 
   def create
