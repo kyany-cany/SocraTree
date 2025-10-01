@@ -33,6 +33,12 @@ export const ChatPage = () => {
   // ブランチ選択状態
   const [selectedBranchMessageId, setSelectedBranchMessageId] = useState<string | null>(null);
 
+  // チャット切り替え時にブランチ状態をリセット
+  useEffect(() => {
+    setBranchingMessageIndex(null);
+    setSelectedBranchMessageId(null);
+  }, [currentChatId]);
+
   // 自動スクロール: messagesが更新されたら最下部へ
   useEffect(() => {
     if (scrollAreaRef.current) {
