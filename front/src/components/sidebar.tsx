@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, MessageSquare, Settings } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -10,7 +10,7 @@ import { apiGetJson } from '@/lib/api';
 import { useAuth } from '@/lib/auth-hooks';
 import type { Chat, Message } from '@/types';
 
-import { ChatListItem } from './ChatListItem';
+import { ChatTree } from './ChatTree';
 
 type SidebarProps = {
   open: boolean;
@@ -92,8 +92,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
     });
   }
 
+  // チャットのMapを作成（高速検索用）
+  const chatMap = useMemo(() => {
+    return new Map(chats.map((chat) => [chat.id, chat]));
+  }, [chats]);
+
   // 親チャットのみを抽出
-  const parentChats = chats.filter((chat) => !chat.parent_chat_id);
+  const parentChats = useMemo(() => {
+    return chats.filter((chat) => !chat.parent_chat_id);
+  }, [chats]);
 
   return (
     <Collapsible open={open} onOpenChange={onToggle} asChild>
@@ -134,42 +141,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </Button>
             </div>
             <Separator />
-            <ScrollArea className="h-[calc(100vh-6rem)] px-2 mt-2">
+            <ScrollArea className="h-[calc(100vh-6rem)] mt-2">
               <div className="px-2 pb-4 space-y-1">
-                {parentChats.map((parentChat) => {
-                  const childChats = parentChat.children
-                    ?.map((childId) => chats.find((c) => c.id === childId))
-                    .filter((c): c is Chat => c !== undefined) || [];
-                  const hasChildren = childChats.length > 0;
-                  const isExpanded = expandedChats.has(parentChat.id);
-
-                  return (
-                    <div key={parentChat.id}>
-                      {/* 親チャット */}
-                      <ChatListItem
-                        chat={parentChat}
-                        isActive={currentChatId === parentChat.id}
-                        onClick={onChatClick}
-                        onDelete={onChatDelete}
-                        hasChildren={hasChildren}
-                        isExpanded={isExpanded}
-                        onToggle={() => toggleExpanded(parentChat.id)}
-                        depth={0}
-                      />
-                      {/* 子チャット */}
-                      {isExpanded && childChats.map((childChat) => (
-                        <ChatListItem
-                          key={childChat.id}
-                          chat={childChat}
-                          isActive={currentChatId === childChat.id}
-                          onClick={onChatClick}
-                          onDelete={onChatDelete}
-                          depth={1}
-                        />
-                      ))}
-                    </div>
-                  );
-                })}
+                {parentChats.map((parentChat) => (
+                  <ChatTree
+                    key={parentChat.id}
+                    chat={parentChat}
+                    chatMap={chatMap}
+                    currentChatId={currentChatId}
+                    expandedChats={expandedChats}
+                    onChatClick={onChatClick}
+                    onChatDelete={onChatDelete}
+                    onToggleExpanded={toggleExpanded}
+                    depth={0}
+                  />
+                ))}
                 {chats.length === 0 && (
                   <div className="text-xs text-muted-foreground px-2 py-3">
                     チャットはまだありません

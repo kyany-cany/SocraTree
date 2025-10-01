@@ -10,10 +10,23 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_30_105357) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_01_034341) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
+
+  create_table "chat_relationships", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "parent_chat_id", null: false
+    t.uuid "child_chat_id", null: false
+    t.uuid "branched_from_message_id"
+    t.integer "depth", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["child_chat_id"], name: "index_chat_relationships_on_child_chat_id"
+    t.index ["depth"], name: "index_chat_relationships_on_depth"
+    t.index ["parent_chat_id", "child_chat_id"], name: "index_chat_rels_on_parent_and_child", unique: true
+    t.index ["parent_chat_id"], name: "index_chat_relationships_on_parent_chat_id"
+  end
 
   create_table "chats", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "title", default: "New chat", null: false
@@ -23,9 +36,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_30_105357) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.uuid "user_id", null: false
-    t.uuid "branched_from_message_id"
     t.index ["archived"], name: "index_chats_on_archived"
-    t.index ["branched_from_message_id"], name: "index_chats_on_branched_from_message_id"
     t.index ["status"], name: "index_chats_on_status"
     t.index ["updated_at"], name: "index_chats_on_updated_at"
     t.index ["user_id", "updated_at"], name: "index_chats_on_user_id_and_updated_at"
@@ -109,7 +120,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_30_105357) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
-  add_foreign_key "chats", "messages", column: "branched_from_message_id"
+  add_foreign_key "chat_relationships", "chats", column: "child_chat_id", on_delete: :cascade
+  add_foreign_key "chat_relationships", "chats", column: "parent_chat_id", on_delete: :cascade
+  add_foreign_key "chat_relationships", "messages", column: "branched_from_message_id", on_delete: :nullify
   add_foreign_key "chats", "users"
   add_foreign_key "messages", "chats", on_delete: :cascade
   add_foreign_key "oauth_access_grants", "oauth_applications", column: "application_id"

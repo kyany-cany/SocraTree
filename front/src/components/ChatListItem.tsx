@@ -12,20 +12,41 @@ import {
 import { archiveChat } from '@/lib/api';
 import type { Chat } from '@/types';
 
+// 定数
+const INDENT_PER_DEPTH = 16; // 階層ごとのインデント幅（px）
+
 interface ChatListItemProps {
   chat: Chat;
   isActive: boolean;
   onClick: (chatId: string) => void;
   onDelete: (chatId: string) => void;
   hasChildren?: boolean;
+  hasGrandchildren?: boolean;
   isExpanded?: boolean;
   onToggle?: () => void;
   depth?: number;
 }
 
-export function ChatListItem({ chat, isActive, onClick, onDelete, hasChildren = false, isExpanded = false, onToggle, depth = 0 }: ChatListItemProps) {
+export function ChatListItem({
+  chat,
+  isActive,
+  onClick,
+  onDelete,
+  hasChildren = false,
+  hasGrandchildren = false,
+  isExpanded = false,
+  onToggle,
+  depth = 0,
+}: ChatListItemProps) {
   const [isArchiving, setIsArchiving] = useState(false);
 
+  // トグルボタンの表示判定
+  const showToggle = hasChildren || hasGrandchildren;
+
+  // スタイル計算
+  const baseIndent = depth * INDENT_PER_DEPTH;
+
+  // イベントハンドラー
   const handleArchive = async (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsArchiving(true);
@@ -47,41 +68,57 @@ export function ChatListItem({ chat, isActive, onClick, onDelete, hasChildren = 
     onToggle?.();
   };
 
-  const indentClass = depth > 0 ? 'pl-4' : '';
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onDelete(chat.id);
+  };
+
+  const displayTitle = chat.title || '（無題）';
+  const toggleAriaLabel = isExpanded ? 'チャットを折りたたむ' : 'チャットを展開';
+  const ChevronIcon = isExpanded ? ChevronDown : ChevronRight;
 
   return (
-    <div className={`group relative ${indentClass}`}>
+    <div className="group relative">
+      {/* メインボタン */}
       <Button
         variant={isActive ? 'secondary' : 'ghost'}
-        className={`w-full justify-start pr-10 overflow-hidden ${
+        className={`w-full justify-start pr-4 overflow-hidden ${
           isActive ? 'bg-accent text-accent-foreground' : ''
-        } ${hasChildren ? 'pl-8' : ''}`}
+        }`}
         onClick={() => onClick(chat.id)}
-        title={chat.title}
-        aria-label={`チャット: ${chat.title}`}
+        title={displayTitle}
+        aria-label={`チャット: ${displayTitle}`}
+        style={{ paddingLeft: `${baseIndent}px` }}
       >
-        <span className="truncate">{chat.title || '（無題）'}</span>
+        <div className="flex items-center gap-1 w-full min-w-0">
+          {/* トグルボタン（展開・折りたたみ） */}
+          {showToggle && onToggle ? (
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-6 w-6 shrink-0"
+              onClick={handleToggle}
+              aria-label={toggleAriaLabel}
+            >
+              <ChevronIcon className="h-3 w-3" />
+            </Button>
+          ) : (
+            <div className="w-2" />
+          )}
+
+          {/* タイトル */}
+          <span className="truncate">{displayTitle}</span>
+        </div>
       </Button>
 
-      {hasChildren && onToggle && (
-        <Button
-          size="icon"
-          variant="ghost"
-          className="absolute left-1 top-1/2 -translate-y-1/2 h-6 w-6 opacity-50 hover:opacity-100 z-10"
-          onClick={handleToggle}
-          aria-label={isExpanded ? 'チャットを折りたたむ' : 'チャットを展開'}
-        >
-          {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-        </Button>
-      )}
-
+      {/* ドロップダウンメニュー */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
             size="icon"
             variant="ghost"
             className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 opacity-0 group-hover:opacity-70 hover:opacity-100"
-            aria-label={`チャットメニュー: ${chat.title}`}
+            aria-label={`チャットメニュー: ${displayTitle}`}
             onClick={(e) => e.stopPropagation()}
           >
             <MoreVertical className="h-3 w-3" />
@@ -99,10 +136,7 @@ export function ChatListItem({ chat, isActive, onClick, onDelete, hasChildren = 
           <DropdownMenuSeparator />
           <DropdownMenuItem
             className="cursor-pointer text-destructive focus:text-destructive"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(chat.id);
-            }}
+            onClick={handleDelete}
           >
             <Trash2 className="mr-2 h-4 w-4" />
             削除

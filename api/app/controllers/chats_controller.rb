@@ -4,12 +4,12 @@ class ChatsController < BaseController
                         .where(archived: false)
                         .order(updated_at: :desc)
                         .limit(50)
-                        .includes(:branched_from_message)
+                        .includes(:parent_relationships, :child_relationships)
 
     # 各チャットに親子関係情報を追加
     chats_with_relations = chats.map do |chat|
-      parent_chat_id = chat.parent_chat&.id
-      child_chat_ids = chat.child_chats.pluck(:id)
+      parent_chat_id = chat.parent_relationships.first&.parent_chat_id
+      child_chat_ids = chat.child_relationships.map(&:child_chat_id)
 
       {
         id: chat.id,

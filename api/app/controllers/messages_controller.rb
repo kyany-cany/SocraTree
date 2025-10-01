@@ -188,8 +188,14 @@ class MessagesController < BaseController
 
     ActiveRecord::Base.transaction do
       new_chat = current_user.chats.create!(
-        title: generated_title,
-        branched_from_message_id: message.id
+        title: generated_title
+      )
+
+      # ChatRelationship を作成して親子関係を確立
+      ChatRelationship.create!(
+        parent_chat: @chat,
+        child_chat: new_chat,
+        branched_from_message: message
       )
 
       # 新しいユーザーメッセージのみを作成
@@ -228,8 +234,8 @@ class MessagesController < BaseController
         title: new_chat.title,
         created_at: new_chat.created_at,
         updated_at: new_chat.updated_at,
-        parent_chat_id: new_chat.parent_chat&.id,
-        children: new_chat.child_chats.pluck(:id)
+        parent_chat_id: new_chat.parent_relationships.first&.parent_chat_id,
+        children: new_chat.child_relationships.map(&:child_chat_id)
       },
       messages: [
         user_msg.as_json(only: [:id, :role, :content, :metadata, :created_at, :updated_at]),
