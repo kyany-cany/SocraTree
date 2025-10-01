@@ -106,7 +106,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <Collapsible open={open} onOpenChange={onToggle} asChild>
       <aside
         data-state={open ? 'open' : 'closed'}
-        className="h-screen bg-sidebar text-sidebar-foreground transition-all duration-300 ease-in-out overflow-hidden relative data-[state=open]:w-64 data-[state=closed]:w-10"
+        className="h-screen bg-sidebar text-sidebar-foreground transition-all duration-300 ease-in-out overflow-hidden relative data-[state=open]:w-70 data-[state=closed]:w-10"
       >
         {/* トグルボタン */}
         <CollapsibleTrigger asChild>

@@ -28,17 +28,17 @@ export const ChatMessage: React.FC<{
         </div>
       ) : (
         <div
-          className={`rounded-2xl px-4 py-2 ${isUser ? 'ml-auto bg-primary text-primary-foreground w-fit' : 'w-full text-left'
+          className={`rounded-2xl px-4 py-2 ${isUser ? 'max-w-[70%] ml-auto bg-primary text-primary-foreground w-fit' : 'w-full text-left'
             }`}
         >
           {isUser ? message.content : <MarkdownMessage text={message.content} />}
         </div>
       )}
       {!isUser && (onReload || onBranch) && !isReloading && !isBranching && (
-        <div className="w-full mt-2 flex gap-2">
+        <div className="w-full mt-2 flex ">
           {onReload && (
             <Button variant="ghost" size="sm" onClick={onReload} className="h-8 px-3">
-              <RotateCw className="h-4 w-4 mr-1" />
+              <RotateCw className="h-4 w-4" />
             </Button>
           )}
           {onBranch && (
@@ -48,7 +48,7 @@ export const ChatMessage: React.FC<{
               onClick={onBranch}
               className={isBranchSelected ? `h-8 px-3 ${BRANCH_BUTTON_SELECTED_CLASS}` : 'h-8 px-3'}
             >
-              <GitBranch className="h-4 w-4 mr-1" />
+              <GitBranch className="h-4 w-4" />
             </Button>
           )}
         </div>
