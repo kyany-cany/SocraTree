@@ -1,15 +1,31 @@
-# README
+# SocraTree 🌱
 
-This is a README file for the project.
+LLM-based Conversational Platform for Visualizing Self-Regulated Learning
 
-## Purpose
+SocraTree は、学習者の自己調整学習（Self-Regulated Learning: SRL）を支援・可視化することを目的とした、LLM ベースの対話プラットフォームです。
 
-This project aims to ... (Describe the project's purpose here)
+研究用途で開発されており、対話を通じて学習者の思考のプロセス・目標設定・モニタリング・振り返りなどを可視化する仕組みの実装を目指しています。
 
-## Usage
+現在は、以下の基本的なアプリケーション機能を実装済みです：
 
-(Explain how to use the project)
+- Docker による開発環境整備
+- ChatGPT 風のチャット画面
+- サイドバーでのチャット一覧管理
+- チャット履歴の保存構造（DB）
+- 認証・ログイン画面
+- 認証画面による研究協力への承諾
 
-## Contributing
+# Research Background / Purpose
 
-(Explain how others can contribute to the project)
+現在、教育工学・自己調整学習（SRL）研究の文脈で以下の課題に取り組んでいます：
+
+LLM との対話を通じて、学習者の自己調整学習を可視化する
+— 対話ログからメタ認知的行動や思考の可視化を試みる研究（修士研究）
+
+本システムでは、単なるチャット UI ではなく、
+学習者が立てたサブゴールや思考の分岐を明示化しながら対話を進められる
+ことを重視しており、将来的には以下のような機能実装を目指しています：
+
+- SRL モデルに基づいたメタ認知の可視化
+
+- 学習ログの分析／可視化（研究用データとしての活用）
